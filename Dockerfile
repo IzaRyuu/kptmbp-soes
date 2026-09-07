@@ -14,14 +14,14 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Install PHP dependencies
+# Install PHP dependencies (Optimized)
 RUN composer install --no-dev --optimize-autoloader
 
 # Set permissions for Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chmod -R 777 storage bootstrap/cache
 
 # Expose port
 EXPOSE 8080
 
-# Start Laravel Server on port 8080
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+# Pre-cache configs and start Laravel Server
+CMD php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=8080
