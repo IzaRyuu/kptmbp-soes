@@ -65,16 +65,45 @@
                 @csrf
 
                 @foreach($attempt->exam->questions as $index => $question)
-                    @php
-                        // Match student answer logic...
-                    @endphp
 
+                    {{-- Question Header --}}
                     <div class="card border mb-3 shadow-none">
                         <div class="card-body">
-                            <!-- Question Text, Options, Reference Answer, Word Count, & Input Marks -->
+
+                            {{-- 1. MCQ OPTIONS --}}
+                            @if(in_array($questionType, ['MCQ', 'MULTIPLE_CHOICE']))
+                                <div>
+                                    {{-- Loop options --}}
+                                </div>
+                            @endif {{-- MUST HAVE THIS @endif --}}
+
+                            {{-- 2. SHORT ANSWER / ESSAY DISPLAY --}}
+                            @if(in_array($questionType, ['SHORT_ANSWER', 'TEXT', 'ESSAY']))
+                                <!-- Expected Answer Box -->
+                                <div class="mt-3 p-3 rounded bg-light border">
+                                    {!! !empty($question->correct_answer_text) ? nl2br(e($question->correct_answer_text)) : ($question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.') !!}
+                                </div>
+
+                                <!-- Student Response Box -->
+                                <div class="mt-2 p-3 rounded bg-light border">
+                                    {{ $answerText ?? 'No Answer Provided' }}
+                                </div>
+
+                                <!-- Award Marks Input Box -->
+                                <div class="mt-3 p-3 bg-white rounded border">
+                                    <input type="number" 
+                                        step="0.5" 
+                                        min="0" 
+                                        max="{{ $question->points ?? 1 }}" 
+                                        name="question_marks[{{ $question->question_id ?? $question->id }}]" 
+                                        value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
+                                </div>
+                            @endif {{-- MUST HAVE THIS @endif --}}
+
                         </div>
                     </div>
-                @endforeach
+
+                @endforeach {{-- CLOSING FOREACH --}}
 
                 <!-- 2. ADD SAVE BUTTON AT THE BOTTOM OF THE LOOP -->
                 <div class="d-flex justify-content-end mt-4 pt-3 border-top">
