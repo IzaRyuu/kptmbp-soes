@@ -85,13 +85,27 @@
                         </div>
 
                     {{-- 2. SHORT ANSWER TEXTAREA --}}
-                    @else
+                    @if(in_array(strtoupper($question->question_type ?? $question->type), ['SHORT_ANSWER', 'ESSAY', 'TEXT']))
                         <div class="mt-3">
+                            <label class="form-label fw-bold">Your Response:</label>
                             <textarea 
                                 name="answers[{{ $question->question_id ?? $question->id }}]" 
-                                class="form-control" 
-                                rows="4" 
-                                placeholder="Type your answer here..."></textarea>
+                                class="form-control short-answer-input" 
+                                rows="5" 
+                                placeholder="Type your response here..."
+                                data-max-words="{{ $question->word_limit ?? 0 }}"
+                            >{{ $savedAnswer ?? '' }}</textarea>
+
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="text-muted">
+                                    @if(!empty($question->word_limit))
+                                        Word Limit: <strong class="max-word-display">{{ $question->word_limit }}</strong> words
+                                    @endif
+                                </small>
+                                <small class="fw-semibold word-count-status text-secondary">
+                                    Word Count: <span class="current-word-count">0</span> @if(!empty($question->word_limit)) / {{ $question->word_limit }} @endif
+                                </small>
+                            </div>
                         </div>
                     @endif
 
@@ -236,6 +250,53 @@ window.addEventListener('blur', function() {
 
         updateTimerDisplay();
         setInterval(updateTimerDisplay, 1000);
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const shortAnswerInputs = document.querySelectorAll('.short-answer-input');
+
+        shortAnswerInputs.forEach(textarea => {
+            const maxWords = parseInt(textarea.getAttribute('data-max-words')) || 0;
+            const container = textarea.closest('.mt-3');
+            const countDisplay = container.querySelector('.current-word-count');
+            const statusDisplay = container.querySelector('.word-count-status');
+
+            function calculateWords(text) {
+                const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+                return words.length;
+            }
+
+            function enforceLimit() {
+                let currentText = textarea.value;
+                let wordCount = calculateWords(currentText);
+
+                if (maxWords > 0 && wordCount > maxWords) {
+                    // Truncate input to max allowed words
+                    const wordsArray = currentText.trim().split(/\s+/).slice(0, maxWords);
+                    textarea.value = wordsArray.join(' ') + ' ';
+                    wordCount = maxWords;
+                    
+                    if (statusDisplay) {
+                        statusDisplay.classList.remove('text-secondary');
+                        statusDisplay.classList.add('text-danger');
+                    }
+                } else {
+                    if (statusDisplay) {
+                        statusDisplay.classList.remove('text-danger');
+                        statusDisplay.classList.add('text-secondary');
+                    }
+                }
+
+                if (countDisplay) {
+                    countDisplay.textContent = wordCount;
+                }
+            }
+
+            textarea.addEventListener('input', enforceLimit);
+            enforceLimit(); // Run on page load for restored draft answers
+        });
     });
 </script>
 

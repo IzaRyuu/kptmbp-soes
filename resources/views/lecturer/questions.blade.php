@@ -151,8 +151,16 @@
 
                         <!-- Short Answer Block -->
                         <div id="shortAnswerBlock" class="mb-3" style="display: none;">
-                            <label class="form-label fw-bold">Expected Answer / Keywords <span class="text-muted fw-normal">(Optional)</span></label>
-                            <textarea name="correct_answer_text" class="form-control" rows="2" placeholder="Reference answer or grading keywords">{{ old('correct_answer_text') }}</textarea>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Maximum Word Limit <span class="text-muted fw-normal">(Optional)</span></label>
+                                <input type="number" name="word_limit" class="form-control" placeholder="e.g. 250 (Leave blank for unlimited)" min="1" value="{{ old('word_limit') }}">
+                                <small class="text-muted">Restricts the maximum number of words a student can write.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Expected Answer / Keywords <span class="text-muted fw-normal">(Optional)</span></label>
+                                <textarea name="correct_answer_text" class="form-control" rows="2" placeholder="Reference answer or grading keywords">{{ old('correct_answer_text') }}</textarea>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 mt-2">
@@ -197,6 +205,13 @@
                                     {{-- Options / Short Answer Reference Display --}}
                                     @if($question->question_type === 'short_answer')
                                         <div class="alert alert-info py-2 px-3 mb-0 fs-7 border-0 bg-info-subtle text-dark">
+                                            @if(!empty($question->word_limit))
+                                                <div class="mb-1">
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-fonts me-1"></i> Max Word Limit: {{ $question->word_limit }} words
+                                                    </span>
+                                                </div>
+                                            @endif
                                             <i class="bi bi-lightbulb-fill text-warning me-2"></i>
                                             <strong>Expected Answer / Keywords:</strong> 
                                             <span class="ms-1">{{ $question->correct_answer_text ?? $question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.' }}</span>
