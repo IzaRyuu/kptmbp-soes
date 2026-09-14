@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use App\Models\QuestionOption;
-use App\Models\StudentAnswer;
 use App\Models\ExamViolation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ExamAttempt;
@@ -472,42 +471,22 @@ class LecturerController extends Controller
      */
     public function saveGrade(Request $request, $attemptId)
     {
-        $attempt = ExamAttempt::findOrFail($attemptId);
-
-        $questionMarks = $request->input('question_marks', []);
-        $totalCalculatedScore = 0;
-
-        foreach ($questionMarks as $questionId => $score) {
-            $scoreValue = (float) $score;
-            $totalCalculatedScore += $scoreValue;
-
-            $studentAnswer = StudentAnswer::where('attempt_id', $attemptId)
-                ->where('question_id', $questionId)
-                ->first();
-
-            if ($studentAnswer) {
-                // Check attribute names dynamically
-                if (array_key_exists('mark', $studentAnswer->getAttributes())) {
-                    $studentAnswer->update(['mark' => $scoreValue]);
-                } elseif (array_key_exists('points', $studentAnswer->getAttributes())) {
-                    $studentAnswer->update(['points' => $scoreValue]);
-                } elseif (array_key_exists('points_awarded', $studentAnswer->getAttributes())) {
-                    $studentAnswer->update(['points_awarded' => $scoreValue]);
-                } elseif (array_key_exists('marks_obtained', $studentAnswer->getAttributes())) {
-                    $studentAnswer->update(['marks_obtained' => $scoreValue]);
-                }
-            }
-        }
-
-        // UPDATE HERE: Use lowercase 'graded' or keep the current status
-        // If your DB expects lowercase: 'status' => 'graded'
-        // If you don't need to change status: remove the 'status' line entirely
-        $attempt->update([
-            'total_score' => (int) round($totalCalculatedScore),
-            'status' => 'graded', // Changed from 'GRADED' to lowercase 'graded'
+        $request->validate([
+            'manual_score' => 'required|numeric|min:0',
         ]);
 
-        return redirect()->back()->with('success', 'All marks saved successfully!');
+        $attempt = ExamAttempt::findOrFail($attemptId);
+        $totalScore = array_sum($request->input('question_marks', []));
+
+        // Overwrite total score directly or add manual short answer scores
+        $attempt->update([
+            'total_score' => $request->input('manual_score'),
+            'status' => 'submitted', // Ensures status remains final
+        ]);
+
+        return redirect()
+            ->route('lecturer.exam.submissions', $attempt->exam_id)
+            ->with('success', 'Student marks updated successfully!');
     }
 
     public function deleteAttempt($attempt_id)
