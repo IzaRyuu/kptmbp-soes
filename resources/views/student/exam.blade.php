@@ -8,19 +8,13 @@
     <title>{{ $exam->title }} - Examination</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 
 <body class="bg-light">
 
 <nav class="navbar navbar-dark bg-dark px-4 py-3">
-
     <span class="navbar-brand fw-bold">
         <i class="bi bi-mortarboard-fill me-2"></i>
         KPTMBP SoES
@@ -29,61 +23,41 @@
     <span class="text-white">
         {{ $student->matrix_number ?? $user->name }}
     </span>
-
 </nav>
-
 
 <div class="container py-5">
 
     {{-- Exam Header --}}
     <div class="card shadow-sm border-0 mb-4">
-
         <div class="card-body">
-
-            <h2 class="fw-bold">
-                {{ $exam->title }}
-            </h2>
+            <h2 class="fw-bold">{{ $exam->title }}</h2>
 
             <p class="text-muted mb-1">
                 Class:
-                <strong>
-                    {{ $exam->class->class_name ?? 'N/A' }}
-                </strong>
+                <strong>{{ $exam->class->class_name ?? 'N/A' }}</strong>
             </p>
 
             <p class="text-muted mb-0">
                 Duration:
-                <strong>
-                    {{ $exam->duration_minutes }} minutes
-                </strong>
+                <strong>{{ $exam->duration_minutes }} minutes</strong>
             </p>
 
-            <div class="card mb-4 border-warning bg-light">
+            <div class="card mb-4 border-warning bg-light mt-3">
                 <div class="card-body d-flex justify-content-between align-items-center py-2">
                     <span class="fw-bold text-dark"><i class="bi bi-clock-history me-1"></i> Time Remaining:</span>
                     <span id="exam-timer" class="badge bg-danger fs-5 px-3 py-2">00:00:00</span>
                 </div>
             </div>
-
         </div>
-
     </div>
 
-
     {{-- ========================================================= --}}
-    {{-- EXAM SUBMISSION FORM --}}
+    {{-- EXAM SUBMISSION FORM (Added id="exam-form") --}}
     {{-- ========================================================= --}}
-
-    <form
-        action="{{ route('student.exam.submit', $exam->exam_id) }}"
-        method="POST"
-    >
-
+    <form id="exam-form" action="{{ route('student.exam.submit', $exam->exam_id) }}" method="POST">
         @csrf
 
-
         {{-- Questions --}}
-
         @foreach($exam->questions as $index => $question)
             <div class="card mb-4 shadow-sm">
                 <div class="card-body">
@@ -110,7 +84,7 @@
                             @endforeach
                         </div>
 
-                    {{-- 2. SHORT ANSWER TEXTAREA (Handles SHORT_ANSWER, TEXT, ESSAY, etc.) --}}
+                    {{-- 2. SHORT ANSWER TEXTAREA --}}
                     @else
                         <div class="mt-3">
                             <textarea 
@@ -125,13 +99,8 @@
             </div>
         @endforeach
 
-
-        {{-- ========================================================= --}}
         {{-- SUBMIT BUTTON --}}
-        {{-- ========================================================= --}}
-
         <div class="text-end mb-5">
-
             <button
                 type="submit"
                 class="btn btn-success btn-lg"
@@ -140,13 +109,12 @@
                 <i class="bi bi-check-circle me-1"></i>
                 Submit Examination
             </button>
-
         </div>
-
 
     </form>
 
 </div>
+
 <!-- Custom Warning Toast Banner -->
 <div id="violation-toast" class="alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg d-none" style="z-index: 9999; min-width: 320px;">
     <strong>⚠️ Security Alert!</strong> Tab switching is prohibited. Violation logged.
@@ -157,7 +125,7 @@ let tabSwitchCount = 0;
 let isSubmitting = false;
 
 // Prevent false positive on form submit
-const examForm = document.querySelector('form');
+const examForm = document.getElementById('exam-form');
 if (examForm) {
     examForm.addEventListener('submit', function() {
         isSubmitting = true;
@@ -165,14 +133,11 @@ if (examForm) {
 }
 
 function handleTabSwitch() {
-    // Ignore trigger if exam form is being submitted
     if (isSubmitting) return;
 
-    // Double check window focus to avoid false positives
     if (document.hidden || !document.hasFocus()) {
         tabSwitchCount++;
 
-        // 1. Display non-blocking banner instead of window.alert()
         const toast = document.getElementById('violation-toast');
         if (toast) {
             toast.innerText = `⚠️ Warning! Tab switching is prohibited. Violation #${tabSwitchCount} logged.`;
@@ -180,7 +145,6 @@ function handleTabSwitch() {
             setTimeout(() => toast.classList.add('d-none'), 4000);
         }
 
-        // 2. Notify backend via AJAX
         fetch("{{ route('student.exam.logViolation', $exam->exam_id) }}", {
             method: 'POST',
             headers: {
@@ -194,7 +158,6 @@ function handleTabSwitch() {
     }
 }
 
-// Attach event listeners safely
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
         handleTabSwitch();
@@ -202,14 +165,14 @@ document.addEventListener('visibilitychange', function() {
 });
 
 window.addEventListener('blur', function() {
-    // Triggers if student clicks onto another application window
     handleTabSwitch();
 });
 </script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let remainingSeconds = parseInt("{{ $remainingSeconds }}", 10) || 0;
+        // Reads exact remaining seconds calculated by controller on page load/refresh
+        let remainingSeconds = parseInt("{{ $remainingSeconds ?? 0 }}", 10);
         const timerElement = document.getElementById('exam-timer');
         const examForm = document.getElementById('exam-form');
         let autoSubmitted = false;
@@ -220,11 +183,10 @@ window.addEventListener('blur', function() {
                     autoSubmitted = true;
                     if (timerElement) timerElement.innerText = "00:00:00";
 
-                    // Show alert; upon pressing OK, submit form or redirect to dashboard
                     alert('Time is up! Your exam is being submitted automatically.');
 
                     if (examForm) {
-                        // Submit form first, controller will process and redirect to dashboard
+                        isSubmitting = true;
                         examForm.submit();
                     } else {
                         window.location.href = "{{ route('student.dashboard') }}";
