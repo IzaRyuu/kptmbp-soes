@@ -102,17 +102,49 @@
                                     <i class="bi bi-journal-check me-1"></i> Expected Answer / Keywords:
                                 </span>
                                 <div class="fs-6 text-dark fw-medium">
-                                    {{ $question->correct_answer_text ?? $question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.' }}
+                                    {!! !empty($question->correct_answer_text) ? nl2br(e($question->correct_answer_text)) : ($question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.') !!}
                                 </div>
                             </div>
 
-                            <!-- Student Submitted Response Box -->
+                            <!-- Student Submitted Response Box with Word Count -->
+                            @php
+                                $trimmedText = trim(strip_tags($answerText ?? ''));
+                                $wordCount = !empty($trimmedText) ? count(preg_split('/\s+/', $trimmedText)) : 0;
+                            @endphp
+
                             <div class="mt-2 p-3 rounded {{ !empty($answerText) ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-muted border' }}">
-                                <span class="small fw-bold d-block mb-1 text-uppercase tracking-wide" style="font-size: 0.75rem;">
-                                    <i class="bi bi-pencil-square me-1"></i> Student Response:
-                                </span> 
-                                <div class="fs-6 {{ !empty($answerText) ? 'fw-semibold' : 'fst-italic' }}">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold text-uppercase tracking-wide" style="font-size: 0.75rem;">
+                                        <i class="bi bi-pencil-square me-1"></i> Student Response:
+                                    </span>
+                                    <span class="badge bg-white text-dark border fw-semibold">
+                                        <i class="bi bi-fonts me-1 text-primary"></i> Word Count: {{ $wordCount }} @if(!empty($question->word_limit)) / {{ $question->word_limit }} max @endif
+                                    </span>
+                                </div> 
+                                <div class="fs-6 {{ !empty($answerText) ? 'fw-semibold text-break' : 'fst-italic' }}">
                                     {{ !empty($answerText) ? $answerText : 'No Answer Provided' }}
+                                </div>
+                            </div>
+
+                            <!-- Individual Question Marking Input Box -->
+                            <div class="mt-3 p-3 bg-white rounded border d-flex justify-content-between align-items-center">
+                                <div>
+                                    <label for="marks_{{ $question->question_id ?? $question->id }}" class="form-label fw-bold mb-0 text-dark small">
+                                        <i class="bi bi-award-fill text-warning me-1"></i> Award Marks for Q{{ $index + 1 }}:
+                                    </label>
+                                    <div class="text-muted small">Max Points: {{ $question->points ?? 1 }}</div>
+                                </div>
+                                <div class="input-group" style="width: 160px;">
+                                    <input type="number" 
+                                           step="0.5" 
+                                           min="0" 
+                                           max="{{ $question->points ?? 1 }}" 
+                                           name="question_marks[{{ $question->question_id ?? $question->id }}]" 
+                                           id="marks_{{ $question->question_id ?? $question->id }}"
+                                           class="form-control text-center fw-bold text-success border-success" 
+                                           placeholder="0"
+                                           value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
+                                    <span class="input-group-text bg-light text-muted">/ {{ $question->points ?? 1 }}</span>
                                 </div>
                             </div>
 
