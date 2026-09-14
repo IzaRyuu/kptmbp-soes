@@ -60,144 +60,127 @@
         </div>
         <div class="card-body p-4">
 
-            <!-- 1. OPEN FORM HERE BEFORE THE LOOP -->
+            <!-- MAIN FORM FOR SAVING INDIVIDUAL QUESTION MARKS -->
             <form action="{{ route('lecturer.attempt.saveGrade', $attempt->attempt_id ?? $attempt->id) }}" method="POST">
                 @csrf
 
                 @foreach($attempt->exam->questions as $index => $question)
+                    @php
+                        $questionType = strtoupper($question->question_type ?? $question->type ?? 'SHORT_ANSWER');
+                        
+                        // Retrieve student's answer record matching question ID
+                        $studentAnswerRecord = optional($attempt->answers ?? collect())->first(function($ans) use ($question) {
+                            return ($ans->question_id ?? $ans->question_id) == ($question->question_id ?? $question->id);
+                        });
+                        
+                        $answerText = $studentAnswerRecord->answer_text ?? $studentAnswerRecord->text ?? '';
+                    @endphp
 
-                    {{-- Question Header --}}
                     <div class="card border mb-3 shadow-none">
                         <div class="card-body">
-
-                            {{-- 1. MCQ OPTIONS --}}
-                            @if(in_array($questionType, ['MCQ', 'MULTIPLE_CHOICE']))
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0">
+                                    Q{{ $index + 1 }}. {!! $question->question_text ?? $question->content !!}
+                                </h6>
                                 <div>
-                                    {{-- Loop options --}}
+                                    <span class="badge bg-secondary me-1">{{ $questionType }}</span>
+                                    <span class="badge bg-dark">{{ $question->points ?? 1 }} pt</span>
                                 </div>
-                            @endif {{-- MUST HAVE THIS @endif --}}
+                            </div>
 
-                            {{-- 2. SHORT ANSWER / ESSAY DISPLAY --}}
+                            {{-- SHORT ANSWER / ESSAY DISPLAY --}}
                             @if(in_array($questionType, ['SHORT_ANSWER', 'TEXT', 'ESSAY']))
-                                <!-- Expected Answer Box -->
+                                <!-- Reference Answer / Keywords Box -->
                                 <div class="mt-3 p-3 rounded bg-light border">
-                                    {!! !empty($question->correct_answer_text) ? nl2br(e($question->correct_answer_text)) : ($question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.') !!}
+                                    <span class="small fw-bold d-block mb-1 text-primary text-uppercase tracking-wide" style="font-size: 0.75rem;">
+                                        <i class="bi bi-journal-check me-1"></i> Expected Answer / Keywords:
+                                    </span>
+                                    <div class="fs-6 text-dark fw-medium">
+                                        {!! !empty($question->correct_answer_text) ? nl2br(e($question->correct_answer_text)) : ($question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.') !!}
+                                    </div>
                                 </div>
 
-                                <!-- Student Response Box -->
-                                <div class="mt-2 p-3 rounded bg-light border">
-                                    {{ $answerText ?? 'No Answer Provided' }}
+                                <!-- Student Submitted Response Box with Word Count -->
+                                @php
+                                    $trimmedText = trim(strip_tags($answerText ?? ''));
+                                    $wordCount = !empty($trimmedText) ? count(preg_split('/\s+/', $trimmedText)) : 0;
+                                @endphp
+
+                                <div class="mt-2 p-3 rounded {{ !empty($answerText) ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-muted border' }}">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-uppercase tracking-wide" style="font-size: 0.75rem;">
+                                            <i class="bi bi-pencil-square me-1"></i> Student Response:
+                                        </span>
+                                        <span class="badge bg-white text-dark border fw-semibold">
+                                            <i class="bi bi-fonts me-1 text-primary"></i> Word Count: {{ $wordCount }} @if(!empty($question->word_limit)) / {{ $question->word_limit }} max @endif
+                                        </span>
+                                    </div> 
+                                    <div class="fs-6 {{ !empty($answerText) ? 'fw-semibold text-break' : 'fst-italic' }}">
+                                        {{ !empty($answerText) ? $answerText : 'No Answer Provided' }}
+                                    </div>
                                 </div>
 
-                                <!-- Award Marks Input Box -->
-                                <div class="mt-3 p-3 bg-white rounded border">
-                                    <input type="number" 
-                                        step="0.5" 
-                                        min="0" 
-                                        max="{{ $question->points ?? 1 }}" 
-                                        name="question_marks[{{ $question->question_id ?? $question->id }}]" 
-                                        value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
+                                <!-- Individual Question Marking Input Box -->
+                                <div class="mt-3 p-3 bg-white rounded border d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <label for="marks_{{ $question->question_id ?? $question->id }}" class="form-label fw-bold mb-0 text-dark small">
+                                            <i class="bi bi-award-fill text-warning me-1"></i> Award Marks for Q{{ $index + 1 }}:
+                                        </label>
+                                        <div class="text-muted small">Max Points: {{ $question->points ?? 1 }}</div>
+                                    </div>
+                                    <div class="input-group" style="width: 160px;">
+                                        <input type="number" 
+                                               step="0.5" 
+                                               min="0" 
+                                               max="{{ $question->points ?? 1 }}" 
+                                               name="question_marks[{{ $question->question_id ?? $question->id }}]" 
+                                               id="marks_{{ $question->question_id ?? $question->id }}"
+                                               class="form-control text-center fw-bold text-success border-success" 
+                                               placeholder="0"
+                                               value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
+                                        <span class="input-group-text bg-light text-muted">/ {{ $question->points ?? 1 }}</span>
+                                    </div>
                                 </div>
-                            @endif {{-- MUST HAVE THIS @endif --}}
+
+                            {{-- MCQ OPTIONS DISPLAY --}}
+                            @else
+                                <div class="mt-3">
+                                    <span class="small fw-bold d-block mb-2 text-muted" style="font-size: 0.75rem;">
+                                        <i class="bi bi-list-check me-1"></i> Options & Student Selection:
+                                    </span>
+                                    <div class="list-group list-group-flush border rounded">
+                                        @foreach($question->options as $option)
+                                            @php
+                                                $isStudentChoice = is_object($studentAnswerRecord) && 
+                                                    (($studentAnswerRecord->selected_option_id ?? $studentAnswerRecord->option_id) == ($option->option_id ?? $option->id));
+                                            @endphp
+                                            <div class="list-group-item d-flex justify-content-between align-items-center {{ $isStudentChoice ? 'bg-light' : '' }}">
+                                                <div>
+                                                    <i class="bi {{ $isStudentChoice ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted' }} me-2"></i>
+                                                    {{ $option->option_text ?? $option->text }}
+                                                </div>
+                                                @if($option->is_correct)
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Correct Answer</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
 
                         </div>
                     </div>
+                @endforeach
 
-                @endforeach {{-- CLOSING FOREACH --}}
-
-                <!-- 2. ADD SAVE BUTTON AT THE BOTTOM OF THE LOOP -->
+                <!-- SAVE ALL MARKS BUTTON -->
                 <div class="d-flex justify-content-end mt-4 pt-3 border-top">
                     <button type="submit" class="btn btn-success btn-lg px-4 fw-semibold shadow-sm">
                         <i class="bi bi-floppy me-2"></i> Save All Marks
                     </button>
                 </div>
 
-            <!-- 3. CLOSE FORM HERE -->
             </form>
 
-                        {{-- SHORT ANSWER / ESSAY DISPLAY --}}
-                        @if(in_array($questionType, ['SHORT_ANSWER', 'TEXT', 'ESSAY']))
-                            <!-- Reference Answer / Keywords Box -->
-                            <div class="mt-3 p-3 rounded bg-light border">
-                                <span class="small fw-bold d-block mb-1 text-primary text-uppercase tracking-wide" style="font-size: 0.75rem;">
-                                    <i class="bi bi-journal-check me-1"></i> Expected Answer / Keywords:
-                                </span>
-                                <div class="fs-6 text-dark fw-medium">
-                                    {!! !empty($question->correct_answer_text) ? nl2br(e($question->correct_answer_text)) : ($question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.') !!}
-                                </div>
-                            </div>
-
-                            <!-- Student Submitted Response Box with Word Count -->
-                            @php
-                                $trimmedText = trim(strip_tags($answerText ?? ''));
-                                $wordCount = !empty($trimmedText) ? count(preg_split('/\s+/', $trimmedText)) : 0;
-                            @endphp
-
-                            <div class="mt-2 p-3 rounded {{ !empty($answerText) ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-muted border' }}">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="small fw-bold text-uppercase tracking-wide" style="font-size: 0.75rem;">
-                                        <i class="bi bi-pencil-square me-1"></i> Student Response:
-                                    </span>
-                                    <span class="badge bg-white text-dark border fw-semibold">
-                                        <i class="bi bi-fonts me-1 text-primary"></i> Word Count: {{ $wordCount }} @if(!empty($question->word_limit)) / {{ $question->word_limit }} max @endif
-                                    </span>
-                                </div> 
-                                <div class="fs-6 {{ !empty($answerText) ? 'fw-semibold text-break' : 'fst-italic' }}">
-                                    {{ !empty($answerText) ? $answerText : 'No Answer Provided' }}
-                                </div>
-                            </div>
-
-                            <!-- Individual Question Marking Input Box -->
-                            <div class="mt-3 p-3 bg-white rounded border d-flex justify-content-between align-items-center">
-                                <div>
-                                    <label for="marks_{{ $question->question_id ?? $question->id }}" class="form-label fw-bold mb-0 text-dark small">
-                                        <i class="bi bi-award-fill text-warning me-1"></i> Award Marks for Q{{ $index + 1 }}:
-                                    </label>
-                                    <div class="text-muted small">Max Points: {{ $question->points ?? 1 }}</div>
-                                </div>
-                                <div class="input-group" style="width: 160px;">
-                                    <input type="number" 
-                                           step="0.5" 
-                                           min="0" 
-                                           max="{{ $question->points ?? 1 }}" 
-                                           name="question_marks[{{ $question->question_id ?? $question->id }}]" 
-                                           id="marks_{{ $question->question_id ?? $question->id }}"
-                                           class="form-control text-center fw-bold text-success border-success" 
-                                           placeholder="0"
-                                           value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
-                                    <span class="input-group-text bg-light text-muted">/ {{ $question->points ?? 1 }}</span>
-                                </div>
-                            </div>
-
-                        {{-- MCQ OPTIONS DISPLAY --}}
-                        @else
-                            <div class="mt-3">
-                                <span class="small fw-bold d-block mb-2 text-muted" style="font-size: 0.75rem;">
-                                    <i class="bi bi-list-check me-1"></i> Options & Student Selection:
-                                </span>
-                                <div class="list-group list-group-flush border rounded">
-                                    @foreach($question->options as $option)
-                                        @php
-                                            $isStudentChoice = is_object($studentAnswerRecord) && 
-                                                (($studentAnswerRecord->selected_option_id ?? $studentAnswerRecord->option_id) == ($option->option_id ?? $option->id));
-                                        @endphp
-                                        <div class="list-group-item d-flex justify-content-between align-items-center {{ $isStudentChoice ? 'bg-light' : '' }}">
-                                            <div>
-                                                <i class="bi {{ $isStudentChoice ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted' }} me-2"></i>
-                                                {{ $option->option_text ?? $option->text }}
-                                            </div>
-                                            @if($option->is_correct)
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle">Correct Answer</span>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-            @endforeach
         </div>
     </div>
 </div>
