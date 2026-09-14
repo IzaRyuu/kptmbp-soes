@@ -481,17 +481,30 @@ class LecturerController extends Controller
             $scoreValue = (float) $score;
             $totalCalculatedScore += $scoreValue;
 
-            // Change 'score' to 'marks' (or your actual database column name)
-            StudentAnswer::where('attempt_id', $attemptId)
+            $studentAnswer = StudentAnswer::where('attempt_id', $attemptId)
                 ->where('question_id', $questionId)
-                ->update([
-                    'marks' => $scoreValue // Changed from 'score' to 'marks'
-                ]);
+                ->first();
+
+            if ($studentAnswer) {
+                // Check attribute names dynamically
+                if (array_key_exists('mark', $studentAnswer->getAttributes())) {
+                    $studentAnswer->update(['mark' => $scoreValue]);
+                } elseif (array_key_exists('points', $studentAnswer->getAttributes())) {
+                    $studentAnswer->update(['points' => $scoreValue]);
+                } elseif (array_key_exists('points_awarded', $studentAnswer->getAttributes())) {
+                    $studentAnswer->update(['points_awarded' => $scoreValue]);
+                } elseif (array_key_exists('marks_obtained', $studentAnswer->getAttributes())) {
+                    $studentAnswer->update(['marks_obtained' => $scoreValue]);
+                }
+            }
         }
 
+        // UPDATE HERE: Use lowercase 'graded' or keep the current status
+        // If your DB expects lowercase: 'status' => 'graded'
+        // If you don't need to change status: remove the 'status' line entirely
         $attempt->update([
             'total_score' => (int) round($totalCalculatedScore),
-            'status' => 'GRADED',
+            'status' => 'graded', // Changed from 'GRADED' to lowercase 'graded'
         ]);
 
         return redirect()->back()->with('success', 'All marks saved successfully!');
