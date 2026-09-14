@@ -36,7 +36,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($submissions as $attempt)
+                        {{-- Change from @forelse($submissions as $attempt) to: --}}
+                        @forelse($attempts ?? $submissions ?? [] as $attempt)
                             @php
                                 $studentName = $attempt->student->user->name ?? $attempt->student->name ?? 'MUHAMMAD SHAFIQ BIN MOHD RAFI';
                                 $studentId = $attempt->student->student_id ?? $attempt->student->id_number ?? 'BP0722';
