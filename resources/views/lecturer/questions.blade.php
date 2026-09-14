@@ -7,6 +7,34 @@
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- CKEditor 5 CDN -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+    <style>
+        /* Custom formatting styles for CKEditor content & rendered questions */
+        .ck-editor__editable_inline {
+            min-height: 180px;
+        }
+        .question-rendered-content img {
+            max-width: 100% !important;
+            height: auto !important;
+            border-radius: 6px;
+            margin: 8px 0;
+        }
+        .question-rendered-content table {
+            width: 100% !important;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .question-rendered-content table, .question-rendered-content th, .question-rendered-content td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+        }
+        .question-rendered-content th {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -52,9 +80,9 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Question Text</label>
-                            <textarea name="question_text" class="form-control @error('question_text') is-invalid @enderror" rows="3" required>{{ old('question_text') }}</textarea>
+                            <textarea name="question_text" id="question_text" class="form-control @error('question_text') is-invalid @enderror">{{ old('question_text') }}</textarea>
                             @error('question_text')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -91,7 +119,6 @@
                                 @php $oldOptions = old('options', ['', '', '', '']); @endphp
                                 @foreach($oldOptions as $i => $optValue)
                                     <div class="input-group mb-2 option-row">
-
                                         <div class="input-group-text">
                                             <input
                                                 type="radio"
@@ -100,7 +127,6 @@
                                                 {{ old('correct_option', 0) == $i ? 'checked' : '' }}
                                             >
                                         </div>
-
                                         <input
                                             type="text"
                                             name="options[]"
@@ -109,14 +135,12 @@
                                             value="{{ $optValue }}"
                                             required
                                         >
-
                                         <button
                                             type="button"
                                             class="btn btn-outline-danger remove-option-btn"
                                         >
                                             <i class="bi bi-x-lg"></i>
                                         </button>
-
                                     </div>
                                 @endforeach
                             </div>
@@ -152,9 +176,10 @@
                             <div class="card border rounded-3 mb-3">
                                 <div class="card-body p-3">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="fw-bold mb-0 text-dark">
-                                            Q{{ $index + 1 }}. {{ $question->question_text }}
-                                        </h6>
+                                        <div class="fw-bold mb-0 text-dark question-rendered-content">
+                                            <span class="me-1">Q{{ $index + 1 }}.</span>
+                                            {!! $question->question_text !!}
+                                        </div>
                                         <form action="{{ route('lecturer.questions.destroy', $question->question_id ?? $question->id) }}" method="POST" onsubmit="return confirm('Delete this question?')">
                                             @csrf
                                             @method('DELETE')
@@ -210,14 +235,46 @@
 </div>
 
 <script>
+    let editorInstance;
+
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize CKEditor 5
+        ClassicEditor
+            .create(document.querySelector('#question_text'), {
+                toolbar: [
+                    'heading', '|',
+                    'bold', 'italic', 'underline', '|',
+                    'insertTable', 'imageUpload', '|',
+                    'bulletedList', 'numberedList', 'blockQuote', '|',
+                    'undo', 'redo'
+                ],
+                table: {
+                    contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
+                }
+            })
+            .then(editor => {
+                editorInstance = editor;
+            })
+            .catch(error => {
+                console.error('CKEditor Error:', error);
+            });
+
+        // Sync CKEditor contents into textarea before form submit
+        const questionForm = document.getElementById('questionForm');
+        if (questionForm) {
+            questionForm.addEventListener('submit', function() {
+                if (editorInstance) {
+                    document.querySelector('#question_text').value = editorInstance.getData();
+                }
+            });
+        }
+
         const typeSelect = document.getElementById('questionTypeSelect');
         const mcqBlock = document.getElementById('mcqOptionsBlock');
         const shortAnswerBlock = document.getElementById('shortAnswerBlock');
         const optionsContainer = document.getElementById('optionsContainer');
         const addOptionBtn = document.getElementById('addOptionBtn');
 
-        // Toggle question type blocks
         function toggleTypeBlocks() {
             if (typeSelect.value === 'mcq') {
                 mcqBlock.style.display = 'block';
@@ -241,9 +298,8 @@
         }
 
         typeSelect.addEventListener('change', toggleTypeBlocks);
-        toggleTypeBlocks(); // Run on initial page load
+        toggleTypeBlocks();
 
-        // Add Option dynamically
         addOptionBtn.addEventListener('click', function() {
             const index = optionsContainer.children.length;
             const row = document.createElement('div');
@@ -259,7 +315,6 @@
             updateRadioValues();
         });
 
-        // Remove Option dynamically
         optionsContainer.addEventListener('click', function(e) {
             if (e.target.closest('.remove-option-btn')) {
                 if (optionsContainer.children.length > 2) {
@@ -271,7 +326,6 @@
             }
         });
 
-        // Re-index radio button values so indices match option inputs sequentially
         function updateRadioValues() {
             const rows = optionsContainer.querySelectorAll('.option-row');
             rows.forEach((row, idx) => {
