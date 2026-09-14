@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use App\Models\QuestionOption;
+use App\Models\StudentAnswer;
 use App\Models\ExamViolation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ExamAttempt;
@@ -471,22 +472,29 @@ class LecturerController extends Controller
      */
     public function saveGrade(Request $request, $attemptId)
     {
-        $request->validate([
-            'manual_score' => 'required|numeric|min:0',
-        ]);
-
         $attempt = ExamAttempt::findOrFail($attemptId);
-        $totalScore = array_sum($request->input('question_marks', []));
 
-        // Overwrite total score directly or add manual short answer scores
+        $questionMarks = $request->input('question_marks', []);
+        $totalCalculatedScore = 0;
+
+        // 1. Loop through each submitted mark and update student answers in DB
+        foreach ($questionMarks as $questionId => $score) {
+            $scoreValue = (float) $score;
+            $totalCalculatedScore += $scoreValue;
+
+            // Update individual question answer score
+            StudentAnswer::where('attempt_id', $attemptId)
+                ->where('question_id', $questionId)
+                ->update(['score' => $scoreValue]);
+        }
+
+        // 2. Cast score to integer or float and update total score in exam_attempts table
         $attempt->update([
-            'total_score' => (int) round($totalScore),
-            'status' => 'GRADED', // or your status logic
+            'total_score' => (int) round($totalCalculatedScore), // cast to (int) to prevent PostgreSQL integer error
+            'status' => 'GRADED',
         ]);
 
-        return redirect()
-            ->route('lecturer.exam.submissions', $attempt->exam_id)
-            ->with('success', 'Student marks updated successfully!');
+        return redirect()->back()->with('success', 'All marks saved successfully!');
     }
 
     public function deleteAttempt($attempt_id)
