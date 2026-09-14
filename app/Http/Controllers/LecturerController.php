@@ -476,11 +476,12 @@ class LecturerController extends Controller
         ]);
 
         $attempt = ExamAttempt::findOrFail($attemptId);
+        $totalScore = array_sum($request->input('question_marks', []));
 
         // Overwrite total score directly or add manual short answer scores
         $attempt->update([
-            'total_score' => $request->input('manual_score'),
-            'status' => 'submitted', // Ensures status remains final
+            'total_score' => (int) round($totalScore),
+            'status' => 'GRADED', // or your status logic
         ]);
 
         return redirect()

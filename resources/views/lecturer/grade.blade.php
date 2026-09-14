@@ -55,44 +55,36 @@
 
     <!-- Questions & Student Answers Section -->
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3 border-bottom">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold"><i class="bi bi-journal-text me-2 text-primary"></i>Questions & Student Answers</h5>
         </div>
         <div class="card-body p-4">
-            @foreach($attempt->exam->questions as $index => $question)
-                @php
-                    // Match student answer from collection or array
-                    $studentAnswerRecord = null;
-                    if (isset($attempt->answers)) {
-                        $studentAnswerRecord = is_array($attempt->answers) 
-                            ? ($attempt->answers[$question->question_id ?? $question->id] ?? null)
-                            : $attempt->answers->firstWhere('question_id', $question->question_id ?? $question->id);
-                    } elseif (isset($attempt->studentAnswers)) {
-                        $studentAnswerRecord = $attempt->studentAnswers->firstWhere('question_id', $question->question_id ?? $question->id);
-                    }
-                    
-                    $answerText = is_object($studentAnswerRecord) 
-                        ? ($studentAnswerRecord->answer_text ?? $studentAnswerRecord->student_answer ?? $studentAnswerRecord->answer)
-                        : $studentAnswerRecord;
 
-                    $questionType = strtoupper($question->question_type ?? $question->type ?? 'MCQ');
-                @endphp
+            <!-- 1. OPEN FORM HERE BEFORE THE LOOP -->
+            <form action="{{ route('lecturer.attempt.saveGrade', $attempt->attempt_id ?? $attempt->id) }}" method="POST">
+                @csrf
 
-                <div class="card border mb-3 shadow-none">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="fw-bold mb-0">
-                                Q{{ $index + 1 }}. {!! $question->question_text ?? $question->content !!}
-                            </h6>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-light text-dark border">
-                                    {{ $questionType }}
-                                </span>
-                                <span class="badge bg-secondary">
-                                    {{ $question->points ?? 1 }} {{ Str::plural('pt', $question->points ?? 1) }}
-                                </span>
-                            </div>
+                @foreach($attempt->exam->questions as $index => $question)
+                    @php
+                        // Match student answer logic...
+                    @endphp
+
+                    <div class="card border mb-3 shadow-none">
+                        <div class="card-body">
+                            <!-- Question Text, Options, Reference Answer, Word Count, & Input Marks -->
                         </div>
+                    </div>
+                @endforeach
+
+                <!-- 2. ADD SAVE BUTTON AT THE BOTTOM OF THE LOOP -->
+                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-success btn-lg px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-floppy me-2"></i> Save All Marks
+                    </button>
+                </div>
+
+            <!-- 3. CLOSE FORM HERE -->
+            </form>
 
                         {{-- SHORT ANSWER / ESSAY DISPLAY --}}
                         @if(in_array($questionType, ['SHORT_ANSWER', 'TEXT', 'ESSAY']))
