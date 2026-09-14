@@ -96,7 +96,18 @@
 
                         {{-- SHORT ANSWER / ESSAY DISPLAY --}}
                         @if(in_array($questionType, ['SHORT_ANSWER', 'TEXT', 'ESSAY']))
-                            <div class="mt-3 p-3 rounded {{ !empty($answerText) ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-muted border' }}">
+                            <!-- Reference Answer / Keywords Box -->
+                            <div class="mt-3 p-3 rounded bg-light border">
+                                <span class="small fw-bold d-block mb-1 text-primary text-uppercase tracking-wide" style="font-size: 0.75rem;">
+                                    <i class="bi bi-journal-check me-1"></i> Expected Answer / Keywords:
+                                </span>
+                                <div class="fs-6 text-dark fw-medium">
+                                    {{ $question->correct_answer_text ?? $question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.' }}
+                                </div>
+                            </div>
+
+                            <!-- Student Submitted Response Box -->
+                            <div class="mt-2 p-3 rounded {{ !empty($answerText) ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-muted border' }}">
                                 <span class="small fw-bold d-block mb-1 text-uppercase tracking-wide" style="font-size: 0.75rem;">
                                     <i class="bi bi-pencil-square me-1"></i> Student Response:
                                 </span> 

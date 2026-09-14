@@ -194,11 +194,17 @@
                                         <span class="badge bg-info text-dark">{{ $question->points ?? 1 }} Point(s)</span>
                                     </div>
 
-                                    {{-- Options Listing matching target image style --}}
-                                    @if($question->options && $question->options->count() > 0)
+                                    {{-- Options / Short Answer Reference Display --}}
+                                    @if($question->question_type === 'short_answer')
+                                        <div class="alert alert-info py-2 px-3 mb-0 fs-7 border-0 bg-info-subtle text-dark">
+                                            <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                                            <strong>Expected Answer / Keywords:</strong> 
+                                            <span class="ms-1">{{ $question->correct_answer_text ?? $question->answer_key ?? $question->expected_answer ?? 'No reference answer provided.' }}</span>
+                                        </div>
+                                    @elseif($question->options && $question->options->count() > 0)
                                         <div class="border rounded-3 overflow-hidden">
                                             @foreach($question->options as $option)
-                                                <div class="d-flex justify-content-between align-items-center p-2.5 border-bottom last-border-0 {{ $option->is_correct ? 'bg-success-subtle text-success fw-bold' : 'bg-white text-dark' }}" style="{{ $loop->last ? 'border-bottom: 0 !important;' : '' }}">
+                                                <div class="d-flex justify-content-between align-items-center p-2.5 border-bottom {{ $option->is_correct ? 'bg-success-subtle text-success fw-bold' : 'bg-white text-dark' }}" style="{{ $loop->last ? 'border-bottom: 0 !important;' : '' }}">
                                                     <div class="d-flex align-items-center ms-2">
                                                         @if($option->is_correct)
                                                             <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
