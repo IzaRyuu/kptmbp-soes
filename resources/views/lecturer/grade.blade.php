@@ -82,7 +82,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="fw-bold mb-0">
-                                Q{{ $index + 1 }}. {{ $question->question_text ?? $question->content }}
+                                Q{{ $index + 1 }}. {!! $question->question_text ?? $question->content !!}
                             </h6>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-light text-dark border">

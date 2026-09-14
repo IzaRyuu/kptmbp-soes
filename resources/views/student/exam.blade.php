@@ -65,7 +65,7 @@
                         Question {{ $index + 1 }} 
                         <span class="badge bg-secondary ms-2">{{ $question->points ?? 1 }} Point</span>
                     </h5>
-                    <p class="mt-3">{{ $question->question_text ?? $question->content }}</p>
+                    <div class="mt-3">{!! $question->question_text ?? $question->content !!}</div>
 
                     {{-- 1. MCQ OPTIONS --}}
                     @if(in_array(strtoupper($question->question_type ?? $question->type), ['MCQ', 'MULTIPLE_CHOICE']))
