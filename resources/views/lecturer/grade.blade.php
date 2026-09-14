@@ -6,18 +6,63 @@
     <title>Grading Attempt - {{ $attempt->student->user->name ?? $attempt->student->name ?? 'Student' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- CSS styles optimized for printing/saving as PDF -->
+    <style>
+        @media print {
+            /* Hide buttons and navigation when saving to PDF */
+            .no-print,
+            .btn,
+            a.btn {
+                display: none !important;
+            }
+
+            body {
+                background-color: #fff !important;
+                color: #000 !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .card {
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+
+            /* Make input boxes clean for physical pen writing/marking */
+            input[type="number"] {
+                border: 1px solid #999 !important;
+                background-color: #fff !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
 </head>
 <body class="bg-light">
 
 <div class="container py-4">
+    <!-- Header Controls -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="h4 mb-1 fw-bold">Grading Student Attempt</h2>
             <p class="text-muted small mb-0">Review responses and update marks for this submission.</p>
         </div>
-        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back to Submissions
-        </a>
+        
+        <div class="d-flex gap-2 no-print">
+            <!-- SAVE AS PDF / PRINT BUTTON -->
+            <button onclick="window.print()" class="btn btn-outline-danger btn-sm shadow-sm">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Save as PDF / Print
+            </button>
+            
+            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Submissions
+            </a>
+        </div>
     </div>
 
     <!-- Student & Exam Details Header -->
@@ -35,7 +80,6 @@
                     </p>
                 </div>
                 <div class="col-md-5 mt-3 mt-md-0 border-start ps-md-4">
-                    <!-- Final Score Display Only (Top button removed) -->
                     <label class="form-label fw-bold text-dark small mb-1">Current Total Score</label>
                     <div class="form-control form-control-lg fw-bold text-success bg-light text-center" style="width: 140px;">
                         {{ number_format($attempt->total_score ?? $attempt->score ?? 0, 1) }}
@@ -60,7 +104,6 @@
                     @php
                         $questionType = strtoupper($question->question_type ?? $question->type ?? 'SHORT_ANSWER');
                         
-                        // Find matching student answer record
                         $studentAnswerRecord = optional($attempt->answers ?? collect())->first(function($ans) use ($question) {
                             $qId = $question->question_id ?? $question->id;
                             return ($ans->question_id ?? null) == $qId;
@@ -83,7 +126,6 @@
 
                             {{-- SHORT ANSWER / ESSAY DISPLAY --}}
                             @if(in_array($questionType, ['SHORT_ANSWER', 'TEXT', 'ESSAY']))
-                                <!-- Expected Answer / Keywords Box -->
                                 <div class="mt-3 p-3 rounded bg-light border">
                                     <span class="small fw-bold d-block mb-1 text-primary text-uppercase tracking-wide" style="font-size: 0.75rem;">
                                         <i class="bi bi-journal-check me-1"></i> Expected Answer / Keywords:
@@ -93,7 +135,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Student Submitted Response Box with Word Count -->
                                 @php
                                     $trimmedText = trim(strip_tags($answerText ?? ''));
                                     $wordCount = !empty($trimmedText) ? count(preg_split('/\s+/', $trimmedText)) : 0;
@@ -110,29 +151,6 @@
                                     </div> 
                                     <div class="fs-6 {{ !empty($answerText) ? 'fw-semibold text-break' : 'fst-italic' }}">
                                         {{ !empty($answerText) ? $answerText : 'No Answer Provided' }}
-                                    </div>
-                                </div>
-
-                                <!-- Individual Question Marking Input Box -->
-                                <div class="mt-3 p-3 bg-white rounded border d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <label for="marks_{{ $question->question_id ?? $question->id }}" class="form-label fw-bold mb-0 text-dark small">
-                                            <i class="bi bi-award-fill text-warning me-1"></i> Award Marks for Q{{ $index + 1 }}:
-                                        </label>
-                                        <div class="text-muted small">Max Points: {{ $question->points ?? 1 }}</div>
-                                    </div>
-                                    <div class="input-group" style="width: 160px;">
-                                        <!-- Note array input name: question_marks[QUESTION_ID] -->
-                                        <input type="number" 
-                                               step="0.5" 
-                                               min="0" 
-                                               max="{{ $question->points ?? 1 }}" 
-                                               name="question_marks[{{ $question->question_id ?? $question->id }}]" 
-                                               id="marks_{{ $question->question_id ?? $question->id }}"
-                                               class="form-control text-center fw-bold text-success border-success" 
-                                               placeholder="0"
-                                               value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
-                                        <span class="input-group-text bg-light text-muted">/ {{ $question->points ?? 1 }}</span>
                                     </div>
                                 </div>
 
@@ -159,37 +177,37 @@
                                             </div>
                                         @endforeach
                                     </div>
-
-                                    <!-- Individual Question Marking Input Box for MCQ (if manual adjustment needed) -->
-                                    <div class="mt-3 p-3 bg-white rounded border d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <label for="marks_{{ $question->question_id ?? $question->id }}" class="form-label fw-bold mb-0 text-dark small">
-                                                <i class="bi bi-award-fill text-warning me-1"></i> Award Marks for Q{{ $index + 1 }}:
-                                            </label>
-                                            <div class="text-muted small">Max Points: {{ $question->points ?? 1 }}</div>
-                                        </div>
-                                        <div class="input-group" style="width: 160px;">
-                                            <input type="number" 
-                                                   step="0.5" 
-                                                   min="0" 
-                                                   max="{{ $question->points ?? 1 }}" 
-                                                   name="question_marks[{{ $question->question_id ?? $question->id }}]" 
-                                                   id="marks_{{ $question->question_id ?? $question->id }}"
-                                                   class="form-control text-center fw-bold text-success border-success" 
-                                                   placeholder="0"
-                                                   value="{{ $studentAnswerRecord->score ?? $studentAnswerRecord->marks ?? '' }}">
-                                            <span class="input-group-text bg-light text-muted">/ {{ $question->points ?? 1 }}</span>
-                                        </div>
-                                    </div>
                                 </div>
                             @endif
+
+                            <!-- Individual Question Marking Box -->
+                            <div class="mt-3 p-3 bg-white rounded border d-flex justify-content-between align-items-center">
+                                <div>
+                                    <label for="marks_{{ $question->question_id ?? $question->id }}" class="form-label fw-bold mb-0 text-dark small">
+                                        <i class="bi bi-award-fill text-warning me-1"></i> Award Marks for Q{{ $index + 1 }}:
+                                    </label>
+                                    <div class="text-muted small">Max Points: {{ $question->points ?? 1 }}</div>
+                                </div>
+                                <div class="input-group" style="width: 160px;">
+                                    <input type="number" 
+                                           step="0.5" 
+                                           min="0" 
+                                           max="{{ $question->points ?? 1 }}" 
+                                           name="question_marks[{{ $question->question_id ?? $question->id }}]" 
+                                           id="marks_{{ $question->question_id ?? $question->id }}"
+                                           class="form-control text-center fw-bold text-success border-success" 
+                                           placeholder="0"
+                                           value="{{ $studentAnswerRecord->marks ?? $studentAnswerRecord->score ?? '' }}">
+                                    <span class="input-group-text bg-light text-muted">/ {{ $question->points ?? 1 }}</span>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
                 @endforeach
 
                 <!-- SAVE ALL MARKS BUTTON -->
-                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-end mt-4 pt-3 border-top no-print">
                     <button type="submit" class="btn btn-success btn-lg px-4 fw-semibold shadow-sm">
                         <i class="bi bi-floppy me-2"></i> Save All Marks
                     </button>
