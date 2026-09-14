@@ -298,6 +298,49 @@ class StudentController extends Controller
         return view('student.exam', compact('exam', 'student', 'attempt', 'remainingSeconds'));
     }
 
+    public function startOrResumeExam($examId)
+    {
+        $exam = Exam::findOrFail($examId);
+        $student = Auth::user()->student;
+
+        // 1. Check if the attempt already exists
+        $attempt = ExamAttempt::where('exam_id', $examId)
+            ->where('student_id', $student->student_id)
+            ->first();
+
+        // 2. If no attempt exists, create a brand new one with fixed start and expire times
+        if (!$attempt) {
+            $now = Carbon::now();
+            $attempt = ExamAttempt::create([
+                'exam_id' => $examId,
+                'student_id' => $student->student_id,
+                'started_at' => $now,
+                'expires_at' => $now->copy()->addMinutes((int)$exam->duration_minutes),
+                'status' => 'in_progress',
+            ]);
+        }
+
+        // 3. Fallback: If expires_at is null on an old record, build it from started_at
+        if (!$attempt->expires_at && $attempt->started_at) {
+            $startedAt = Carbon::parse($attempt->started_at);
+            $attempt->expires_at = $startedAt->copy()->addMinutes((int)$exam->duration_minutes);
+            $attempt->save();
+        }
+
+        // 4. Calculate exact remaining seconds from the fixed expires_at time
+        $now = Carbon::now();
+        $expiresAt = Carbon::parse($attempt->expires_at);
+        $remainingSeconds = $now->gte($expiresAt) ? 0 : $now->diffInSeconds($expiresAt);
+
+        // 5. Handle expired attempt
+        if ($remainingSeconds <= 0 && $attempt->status === 'in_progress') {
+            $attempt->update(['status' => 'completed']);
+            return redirect()->route('student.dashboard')->with('error', 'Exam time has expired!');
+        }
+
+        return view('student.exam', compact('exam', 'student', 'attempt', 'remainingSeconds'));
+    }
+
     /**
      * Submit examination (Testing mode enabled - overwrites result)
      */
