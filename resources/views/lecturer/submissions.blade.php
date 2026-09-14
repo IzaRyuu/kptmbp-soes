@@ -43,10 +43,18 @@
                     </thead>
                     <tbody>
                         @forelse($exam->attempts as $attempt)
+                            @php
+                                // Extract email prefix before @ to use as Student ID / No Matriks
+                                $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
+                                $extractedMatricId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
+                                
+                                // Fallback to database ID columns if email extraction fails
+                                $studentId = $extractedMatricId !== 'N/A' ? $extractedMatricId : ($attempt->student->student_id ?? $attempt->student->id_number ?? 'N/A');
+                            @endphp
                             <tr>
                                 <td class="fw-bold ps-4">
                                     {{ $attempt->student->user->name ?? $attempt->student->name ?? 'N/A' }} 
-                                    <span class="text-muted fw-normal">({{ $attempt->student->student_id ?? $attempt->student->id_number ?? $attempt->student_id ?? 'N/A' }})</span>
+                                    <span class="text-muted fw-normal">({{ $studentId }})</span>
                                 </td>
                                 <td>{{ $attempt->submitted_at ? \Carbon\Carbon::parse($attempt->submitted_at)->format('d M Y, h:i A') : 'In Progress' }}</td>
                                 <td><span class="badge bg-primary fs-6">{{ $attempt->total_score ?? 0 }} Marks</span></td>
@@ -109,20 +117,25 @@
                             <tr>
                                 <th style="width: 50px;">#</th>
                                 <th class="pdf-name-col">Student Name</th>
-                                <th>Student ID</th>
+                                <th>Student ID / No Matriks</th>
                                 <th>Submitted At</th>
                                 <th class="text-end">Final Score</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($exam->attempts as $index => $attempt)
+                                @php
+                                    $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
+                                    $extractedMatricId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
+                                    $studentId = $extractedMatricId !== 'N/A' ? $extractedMatricId : ($attempt->student->student_id ?? $attempt->student->id_number ?? 'N/A');
+                                @endphp
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td class="fw-bold pdf-name-col">
                                         {{ $attempt->student->user->name ?? $attempt->student->name ?? 'N/A' }}
                                     </td>
                                     <td class="fw-semibold">
-                                        {{ $attempt->student->student_id ?? $attempt->student->id_number ?? $attempt->student_id ?? 'N/A' }}
+                                        {{ $studentId }}
                                     </td>
                                     <td class="small">
                                         {{ $attempt->submitted_at ? \Carbon\Carbon::parse($attempt->submitted_at)->format('d M Y, h:i A') : 'In Progress' }}
