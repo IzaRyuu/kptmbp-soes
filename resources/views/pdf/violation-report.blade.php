@@ -19,7 +19,14 @@
     </div>
 
     <p><strong>Exam Title:</strong> {{ $exam->title }}</p>
-    <p><strong>Course:</strong> {{ $exam->course->course_name ?? 'N/A' }}</p>
+    <p><strong>Course:</strong> 
+        {{ 
+            $exam->course->course_name 
+            ?? $exam->course->course_code 
+            ?? $exam->class->class_name 
+            ?? 'General Exam' 
+        }}
+    </p>
     <p><strong>Total Violations Recorded:</strong> {{ $exam->violations->count() }}</p>
     <p><strong>Generated Date:</strong> {{ now()->format('d M Y, h:i A') }}</p>
 

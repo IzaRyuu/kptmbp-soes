@@ -412,7 +412,13 @@
                                                     {{ $exam->violations->count() }} Violation(s)
                                                 </span>
                                                 <p class="text-muted small mb-0">
-                                                    <i class="bi bi-people me-1"></i>{{ $exam->course->course_code ?? 'Exam ID: ' . $exam->exam_id }}
+                                                    <i class="bi bi-book me-1"></i>
+                                                    {{ 
+                                                        $exam->course->course_code 
+                                                        ?? $exam->course->course_name 
+                                                        ?? $exam->class->class_name 
+                                                        ?? 'General Exam' 
+                                                    }}
                                                 </p>
                                             </div>
                                         </div>
@@ -428,7 +434,16 @@
                                                     <h5 class="modal-title fw-bold text-danger mb-0">
                                                         🚨 {{ $exam->title }} - Security Violations
                                                     </h5>
-                                                    <small class="text-muted">Course: {{ $exam->course->course_name ?? 'N/A' }}</small>
+                                                    <small class="text-muted">
+                                                        Course: 
+                                                        {{ 
+                                                            $exam->course->course_name 
+                                                            ?? $exam->course->course_code 
+                                                            ?? $exam->course->title 
+                                                            ?? $exam->subject_name 
+                                                            ?? ($exam->class->class_name ? 'Class: ' . $exam->class->class_name : 'General Exam') 
+                                                        }}
+                                                    </small>
                                                 </div>
                                                 <div class="d-flex gap-2">
                                                     <!-- PDF Export Button -->
