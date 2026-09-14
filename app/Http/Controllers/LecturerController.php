@@ -477,20 +477,20 @@ class LecturerController extends Controller
         $questionMarks = $request->input('question_marks', []);
         $totalCalculatedScore = 0;
 
-        // 1. Loop through each submitted mark and update student answers in DB
         foreach ($questionMarks as $questionId => $score) {
             $scoreValue = (float) $score;
             $totalCalculatedScore += $scoreValue;
 
-            // Update individual question answer score
+            // Change 'score' to 'marks' (or your actual database column name)
             StudentAnswer::where('attempt_id', $attemptId)
                 ->where('question_id', $questionId)
-                ->update(['score' => $scoreValue]);
+                ->update([
+                    'marks' => $scoreValue // Changed from 'score' to 'marks'
+                ]);
         }
 
-        // 2. Cast score to integer or float and update total score in exam_attempts table
         $attempt->update([
-            'total_score' => (int) round($totalCalculatedScore), // cast to (int) to prevent PostgreSQL integer error
+            'total_score' => (int) round($totalCalculatedScore),
             'status' => 'GRADED',
         ]);
 
