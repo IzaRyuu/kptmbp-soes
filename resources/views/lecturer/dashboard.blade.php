@@ -394,104 +394,99 @@
                 </div>
 
                 <div class="tab-pane fade" id="tab-violation" role="tabpanel">
-                    <div class="space-y-6">
+                    <h4 class="fw-bold mb-4">Security Violations</h4>
 
-                        {{-- ================================================= --}}
-                        {{-- BULK DELETE FORM WRAPPING EXAM VIOLATION CARDS --}}
-                        {{-- ================================================= --}}
-                        <form action="{{ route('lecturer.violations.bulk-delete') }}" method="POST" id="bulk-delete-violations-form">
-                            @csrf
-                            @method('DELETE')
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0 fw-bold text-danger">
-                                    🚨 Security & Tab-Switching Violations (Grouped by Exam)
-                                </h5>
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="executeBulkDelete()">
-                                    <i class="bi bi-trash me-1"></i> Delete Selected
-                                </button>
-                            </div>
-
-                            @isset($violationsByExam)
-                                @forelse($violationsByExam as $exam)
-                                    <div class="card shadow-sm border mb-4">
-                                        <!-- Exam Header -->
-                                        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <!-- Exam Cards Grid (Matching Manage Students UI) -->
+                    <div class="row g-3">
+                        @isset($violationsByExam)
+                            @forelse($violationsByExam as $exam)
+                                <div class="col-md-4">
+                                    <div class="card shadow-sm border-0 h-100 hover-shadow transition" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#violationModal-{{ $exam->exam_id }}">
+                                        <div class="card-body d-flex align-items-center gap-3">
+                                            <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3">
+                                                <i class="bi bi-shield-slash fs-2"></i>
+                                            </div>
                                             <div>
-                                                <h6 class="mb-0 fw-bold text-dark">
-                                                    <i class="bi bi-file-earmark-text me-2 text-primary"></i>{{ $exam->title }}
-                                                </h6>
-                                                <small class="text-muted">
-                                                    Course: {{ $exam->course->course_name ?? 'N/A' }} | Class: {{ $exam->class->class_name ?? 'N/A' }}
-                                                </small>
-                                            </div>
-                                            <span class="badge bg-danger fs-6">
-                                                {{ $exam->violations->count() }} Violations
-                                            </span>
-                                        </div>
-
-                                        <!-- Violations Table for this specific exam -->
-                                        <div class="card-body p-0">
-                                            <div class="table-responsive">
-                                                <table class="table table-hover align-middle text-nowrap mb-0">
-                                                    <thead class="table-light">
-                                                        <tr>
-                                                            <th style="width: 45px;" class="text-center ps-3">
-                                                                <input type="checkbox" class="form-check-input select-all-exam-violations" data-exam-id="{{ $exam->exam_id }}">
-                                                            </th>
-                                                            <th style="width: 200px;">Timestamp</th>
-                                                            <th style="width: 280px;">Student Name</th>
-                                                            <th style="width: 180px;">Violation Type</th>
-                                                            <th class="text-center" style="width: 100px;">Severity</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach($exam->violations as $violation)
-                                                            @php 
-                                                                $vId = $violation->violation_id ?? $violation->id ?? $violation->exam_violation_id; 
-                                                            @endphp
-                                                            <tr id="violation-row-{{ $vId }}">
-                                                                <td class="text-center ps-3">
-                                                                    <input type="checkbox" name="violation_ids[]" value="{{ $vId }}" class="form-check-input violation-checkbox exam-checkbox-{{ $exam->exam_id }}">
-                                                                </td>
-                                                                <td class="text-muted fw-medium">
-                                                                    {{ \Carbon\Carbon::parse($violation->occurred_at ?? $violation->created_at)->format('d M Y, h:i A') }}
-                                                                </td>
-                                                                <td class="fw-bold text-dark">
-                                                                    {{ $violation->student->user->name ?? $violation->student->name ?? 'Unknown Student' }}
-                                                                    @if(isset($violation->student->matric_no))
-                                                                        <span class="text-muted font-normal">({{ $violation->student->matric_no }})</span>
-                                                                    @endif
-                                                                </td>
-                                                                <td>
-                                                                    <span class="badge bg-warning text-dark fw-semibold px-2 py-1">
-                                                                        {{ str_replace('_', ' ', strtoupper($violation->violation_type ?? $violation->type ?? 'TAB SWITCH')) }}
-                                                                    </span>
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    <span class="badge bg-danger px-2 py-1">HIGH</span>
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
+                                                <h6 class="fw-bold mb-1 text-dark">{{ $exam->title }}</h6>
+                                                <span class="badge bg-danger text-white mb-1">
+                                                    {{ $exam->violations->count() }} Violation(s)
+                                                </span>
+                                                <p class="text-muted small mb-0">
+                                                    <i class="bi bi-people me-1"></i>{{ $exam->course->course_code ?? 'Exam ID: ' . $exam->exam_id }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                @empty
-                                    <div class="card shadow-sm border p-4 text-center text-muted">
-                                        <i class="bi bi-shield-check fs-1 text-success mb-2"></i>
-                                        <p class="mb-0">No exam violations or tab switches detected across any exams.</p>
-                                    </div>
-                                @endforelse
-                            @else
-                                <div class="card shadow-sm border p-4 text-center text-muted">
-                                    <p class="mb-0">No exam data available.</p>
                                 </div>
-                            @endisset
 
-                        </form>
-
+                                <!-- Modal for Exam Violation Details -->
+                                <div class="modal fade" id="violationModal-{{ $exam->exam_id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-light">
+                                                <div>
+                                                    <h5 class="modal-title fw-bold text-danger mb-0">
+                                                        🚨 {{ $exam->title }} - Security Violations
+                                                    </h5>
+                                                    <small class="text-muted">Course: {{ $exam->course->course_name ?? 'N/A' }}</small>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <!-- PDF Export Button -->
+                                                    <a href="{{ route('lecturer.violations.export-pdf', $exam->exam_id) }}" class="btn btn-outline-danger btn-sm">
+                                                        <i class="bi bi-file-earmark-pdf me-1"></i> Save Evidence as PDF
+                                                    </a>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover align-middle text-nowrap mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th class="ps-3" style="width: 180px;">Timestamp</th>
+                                                                <th>Student Name</th>
+                                                                <th>Violation Type</th>
+                                                                <th class="text-center" style="width: 100px;">Severity</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($exam->violations as $violation)
+                                                                <tr>
+                                                                    <td class="ps-3 text-muted fw-medium">
+                                                                        {{ \Carbon\Carbon::parse($violation->occurred_at ?? $violation->created_at)->format('d M Y, h:i A') }}
+                                                                    </td>
+                                                                    <td class="fw-bold text-dark">
+                                                                        {{ $violation->student->user->name ?? $violation->student->name ?? 'Unknown Student' }}
+                                                                        @if(isset($violation->student->matric_no))
+                                                                            <span class="text-muted font-normal">({{ $violation->student->matric_no }})</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-warning text-dark fw-semibold px-2 py-1">
+                                                                            {{ str_replace('_', ' ', strtoupper($violation->violation_type ?? 'TAB SWITCH')) }}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="badge bg-danger px-2 py-1">HIGH</span>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="col-12">
+                                    <div class="card border p-4 text-center text-muted">
+                                        <i class="bi bi-shield-check fs-1 text-success mb-2"></i>
+                                        <p class="mb-0">No exam violations detected.</p>
+                                    </div>
+                                </div>
+                            @endforelse
+                        @endisset
                     </div>
                 </div>
 

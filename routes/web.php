@@ -88,6 +88,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('lecturer.violations.bulk-delete');
     Route::delete('/lecturer/questions/{id}', [LecturerController::class, 'destroyQuestion'])
         ->name('lecturer.questions.destroy');
+    Route::get('/lecturer/violations/export-pdf/{examId}', [LecturerController::class, 'exportPdf'])
+        ->name('lecturer.violations.export-pdf');
 
 Route::middleware(['auth'])->prefix('lecturer')->group(function () {
     Route::delete('/violations/bulk-delete', [LecturerController::class, 'bulkDeleteViolations'])->name('lecturer.violations.bulk-delete');

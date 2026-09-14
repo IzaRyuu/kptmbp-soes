@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use App\Models\QuestionOption;
 use App\Models\ExamViolation;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ExamAttempt;
 use Illuminate\Support\Facades\DB;
 
@@ -399,6 +400,15 @@ class LecturerController extends Controller
             'count' => $violations->count(),
             'violations' => $violations
         ]);
+    }
+
+    public function exportPdf($examId)
+    {
+        $exam = Exam::with(['violations.student', 'course', 'class'])->findOrFail($examId);
+
+        $pdf = Pdf::loadView('pdf.violation-report', compact('exam'));
+        
+        return $pdf->download("Violation_Report_{$exam->title}.pdf");
     }
 
     public function destroyQuestion($id)
