@@ -54,10 +54,14 @@ class LecturerController extends Controller
         $courses = Course::all();
 
         // Retrieve Exams created by this lecturer
-        $exams = Exam::with(['class', 'course', 'questions'])
+        $exams = Exam::with(['class', 'course', 'questions', 'violations.student'])
             ->where('lecturer_id', $lecturer->lecturer_id)
             ->latest()
             ->get();
+
+        $violationsByExam = $exams->filter(function ($exam) {
+            return $exam->violations->isNotEmpty();
+        }); 
 
         // Counts setup
         $totalClasses  = $myClasses->count();
@@ -72,7 +76,7 @@ class LecturerController extends Controller
         $activityLogs = ActivityLog::with('user')->latest()->take(10)->get();
 
         return view('lecturer.dashboard', compact(
-            'user', 'lecturer', 'violations', 'myClasses', 'courses', 'exams', 
+            'user', 'lecturer', 'violations', 'violationsByExam', 'myClasses', 'courses', 'exams', 
             'students', 'activityLogs', 'totalClasses', 'totalExams', 'totalStudents', 'assignedClasses'
         ))->with('classes', $myClasses);
     }
