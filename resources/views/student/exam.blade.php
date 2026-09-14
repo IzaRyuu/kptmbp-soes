@@ -171,17 +171,37 @@ window.addEventListener('blur', function() {
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Reads exact remaining seconds calculated by controller on page load/refresh
-        let remainingSeconds = parseInt("{{ $remainingSeconds ?? 0 }}", 10);
+        const examId = "{{ $exam->exam_id }}";
+        const storageKey = `exam_end_time_${examId}`;
+        const durationMinutes = parseInt("{{ $exam->duration_minutes }}", 10) || 60;
         const timerElement = document.getElementById('exam-timer');
         const examForm = document.getElementById('exam-form');
         let autoSubmitted = false;
 
+        // 1. Get existing end time or set a fixed future end time in browser storage
+        let endTime = localStorage.getItem(storageKey);
+
+        if (!endTime) {
+            // Set end time = current time + exam duration in milliseconds
+            endTime = Date.now() + (durationMinutes * 60 * 1000);
+            localStorage.setItem(storageKey, endTime);
+        } else {
+            endTime = parseInt(endTime, 10);
+        }
+
+        // 2. Timer Update Loop based on Date.now()
         function updateTimerDisplay() {
+            const now = Date.now();
+            const remainingMs = endTime - now;
+            const remainingSeconds = Math.floor(remainingMs / 1000);
+
             if (remainingSeconds <= 0) {
                 if (!autoSubmitted) {
                     autoSubmitted = true;
                     if (timerElement) timerElement.innerText = "00:00:00";
+                    
+                    // Clear storage after exam ends
+                    localStorage.removeItem(storageKey);
 
                     alert('Time is up! Your exam is being submitted automatically.');
 
@@ -205,8 +225,13 @@ window.addEventListener('blur', function() {
                     String(minutes).padStart(2, '0') + ':' +
                     String(seconds).padStart(2, '0');
             }
+        }
 
-            remainingSeconds--;
+        // Clear timer storage on successful manual form submission
+        if (examForm) {
+            examForm.addEventListener('submit', function() {
+                localStorage.removeItem(storageKey);
+            });
         }
 
         updateTimerDisplay();

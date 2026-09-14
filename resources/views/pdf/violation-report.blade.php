@@ -45,7 +45,7 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ \Carbon\Carbon::parse($violation->occurred_at ?? $violation->created_at)->format('d M Y, h:i A') }}</td>
-                    <td>{{ $violation->student->user->name ?? $violation->student->name ?? 'N/A' }} ({{ $violation->student->matric_no ?? 'N/A' }})</td>
+                    <td>{{ $violation->student->user->name ?? $violation->student->name ?? }} ({{ $violation->student->matric_no ?? 'N/A' }})</td>
                     <td>{{ str_replace('_', ' ', strtoupper($violation->violation_type ?? 'TAB SWITCH')) }}</td>
                     <td><span class="badge">HIGH</span></td>
                 </tr>

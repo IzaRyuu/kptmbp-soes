@@ -16,6 +16,7 @@ class ExamAttempt extends Model
         'student_id',
         'started_at',
         'submitted_at',
+        'expires_at',
         'status',
         'total_score',
     ];
