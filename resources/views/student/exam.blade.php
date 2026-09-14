@@ -52,7 +52,7 @@
     </div>
 
     {{-- ========================================================= --}}
-    {{-- EXAM SUBMISSION FORM (Added id="exam-form") --}}
+    {{-- EXAM SUBMISSION FORM --}}
     {{-- ========================================================= --}}
     <form id="exam-form" action="{{ route('student.exam.submit', $exam->exam_id) }}" method="POST">
         @csrf
@@ -83,6 +83,7 @@
                                 </div>
                             @endforeach
                         </div>
+                    @endif
 
                     {{-- 2. SHORT ANSWER TEXTAREA --}}
                     @if(in_array(strtoupper($question->question_type ?? $question->type), ['SHORT_ANSWER', 'ESSAY', 'TEXT']))
@@ -192,18 +193,15 @@ window.addEventListener('blur', function() {
         const examForm = document.getElementById('exam-form');
         let autoSubmitted = false;
 
-        // 1. Get existing end time or set a fixed future end time in browser storage
         let endTime = localStorage.getItem(storageKey);
 
         if (!endTime) {
-            // Set end time = current time + exam duration in milliseconds
             endTime = Date.now() + (durationMinutes * 60 * 1000);
             localStorage.setItem(storageKey, endTime);
         } else {
             endTime = parseInt(endTime, 10);
         }
 
-        // 2. Timer Update Loop based on Date.now()
         function updateTimerDisplay() {
             const now = Date.now();
             const remainingMs = endTime - now;
@@ -214,7 +212,6 @@ window.addEventListener('blur', function() {
                     autoSubmitted = true;
                     if (timerElement) timerElement.innerText = "00:00:00";
                     
-                    // Clear storage after exam ends
                     localStorage.removeItem(storageKey);
 
                     alert('Time is up! Your exam is being submitted automatically.');
@@ -241,7 +238,6 @@ window.addEventListener('blur', function() {
             }
         }
 
-        // Clear timer storage on successful manual form submission
         if (examForm) {
             examForm.addEventListener('submit', function() {
                 localStorage.removeItem(storageKey);
@@ -273,7 +269,6 @@ window.addEventListener('blur', function() {
                 let wordCount = calculateWords(currentText);
 
                 if (maxWords > 0 && wordCount > maxWords) {
-                    // Truncate input to max allowed words
                     const wordsArray = currentText.trim().split(/\s+/).slice(0, maxWords);
                     textarea.value = wordsArray.join(' ') + ' ';
                     wordCount = maxWords;
@@ -295,7 +290,7 @@ window.addEventListener('blur', function() {
             }
 
             textarea.addEventListener('input', enforceLimit);
-            enforceLimit(); // Run on page load for restored draft answers
+            enforceLimit();
         });
     });
 </script>
