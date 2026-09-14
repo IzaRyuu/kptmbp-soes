@@ -471,17 +471,34 @@ class LecturerController extends Controller
      */
     public function saveGrade(Request $request, $attemptId)
     {
-        $request->validate([
-            'manual_score' => 'required|numeric|min:0',
-        ]);
-
         $attempt = ExamAttempt::findOrFail($attemptId);
-        $totalScore = array_sum($request->input('question_marks', []));
 
-        // Overwrite total score directly or add manual short answer scores
+        // 1. Process individual question marks if submitted
+        $questionMarks = $request->input('question_marks', []);
+        $totalCalculatedScore = 0;
+
+        if (!empty($questionMarks)) {
+            foreach ($questionMarks as $questionId => $score) {
+                $scoreValue = (float) $score;
+                $totalCalculatedScore += $scoreValue;
+
+                // Update student answer mark using DB::table to avoid column missing errors
+                \Illuminate\Support\Facades\DB::table('student_answers')
+                    ->where('attempt_id', $attemptId)
+                    ->where('question_id', $questionId)
+                    ->update(['marks' => $scoreValue]);
+            }
+        }
+
+        // 2. Use manual score if provided, otherwise fallback to calculated total
+        $finalScore = $request->filled('manual_score') 
+            ? $request->input('manual_score') 
+            : $totalCalculatedScore;
+
+        // 3. Update attempt record (cast total_score to int to prevent PostgreSQL decimal error)
         $attempt->update([
-            'total_score' => $request->input('manual_score'),
-            'status' => 'submitted', // Ensures status remains final
+            'total_score' => (int) round((float) $finalScore),
+            'status' => 'submitted', // Keeps valid PostgreSQL status constraint
         ]);
 
         return redirect()
