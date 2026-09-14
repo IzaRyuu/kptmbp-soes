@@ -50,4 +50,10 @@ class Exam extends Model
     {
         return $this->hasMany(ExamAttempt::class, 'exam_id', 'exam_id');
     }
+
+    // Relationship to violations table
+    public function violations()
+    {
+        return $this->hasMany(ExamViolation::class, 'exam_id', 'exam_id');
+    }
 }
