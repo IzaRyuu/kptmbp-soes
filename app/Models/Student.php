@@ -20,6 +20,7 @@ class Student extends Model
     protected $fillable = [
         'user_id',
         'matrix_number',
+        'matric_number',
         'program_code',
     ];
 
