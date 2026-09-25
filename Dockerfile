@@ -20,6 +20,9 @@ RUN composer install --no-dev --optimize-autoloader
 # Set permissions for Laravel
 RUN chmod -R 777 storage bootstrap/cache
 
+# Create storage symlink
+RUN php artisan storage:link --force
+
 # Expose port
 EXPOSE 8080
 

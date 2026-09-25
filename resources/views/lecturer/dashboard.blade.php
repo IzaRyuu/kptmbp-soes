@@ -449,9 +449,10 @@
                                 <div class="row align-items-center mb-4">
                                     <div class="col-auto">
                                         <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D6EFD&color=fff' }}" 
-                                            alt="Profile Image" 
-                                            class="rounded-circle img-thumbnail shadow-sm" 
-                                            style="width: 100px; height: 100px; object-fit: cover;">
+                                        alt="Profile Image"    
+                                        class="rounded-circle img-thumbnail shadow-sm" 
+                                        style="width: 100px; height: 100px; object-fit: cover;"
+                                        onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0D6EFD&color=fff';">
                                     </div>
                                     <div class="col">
                                         <label for="profile_image" class="form-label fw-semibold">Change Avatar</label>
