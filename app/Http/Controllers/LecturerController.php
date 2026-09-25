@@ -7,12 +7,14 @@ use App\Models\Question;
 use App\Models\Lecturer;
 use App\Models\Classes;
 use App\Models\Course;
+use App\Models\User;
 use App\Models\Student;
 use App\Models\ActivityLog;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use App\Models\QuestionOption;
 use App\Models\ExamViolation;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -80,6 +82,38 @@ class LecturerController extends Controller
             'user', 'lecturer', 'violations', 'violationsByExam', 'myClasses', 'courses', 'exams', 
             'students', 'activityLogs', 'totalClasses', 'totalExams', 'totalStudents', 'assignedClasses'
         ))->with('classes', $myClasses);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . ($user->user_id ?? $user->id) . ',user_id',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $updateData = [
+            'name' => $request->name,
+            'email' => $request->email,
+        ];
+
+        // Handle Profile Picture Upload
+        if ($request->hasFile('profile_image')) {
+            // Delete old image if exists
+            if ($user->profile_image && Storage::exists('public/' . $user->profile_image)) {
+                Storage::delete('public/' . $user->profile_image);
+            }
+
+            $path = $request->file('profile_image')->store('profile_images', 'public');
+            $updateData['profile_image'] = $path;
+        }
+
+        // Direct database update using primary key
+        User::where('user_id', $user->user_id ?? $user->id)->update($updateData);
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
     public function manageStudents()
@@ -240,67 +274,6 @@ class LecturerController extends Controller
 
         return redirect()->back()->with('success', 'New target class created successfully!');
     }
-    // 3. Question Management View
-    // public function manageQuestions($examId)
-    //{
-        //$exam = Exam::with([
-            //'class',
-            //'questions.options'
-        //])->findOrFail($examId);
-
-        //return view('lecturer.questions', compact('exam'));
-    //}
-
-    // 4. Store Question
-    /* public function storeQuestion(Request $request, $examId)
-    {
-        $request->validate([
-            'question_text' => 'required|string',
-            'question_type' => 'required|in:mcq,short_answer',
-            'points'        => 'required|integer|min:1',
-            'options'       => 'nullable|array',
-            'correct_option' => 'nullable|integer',
-        ]);
-
-        try {
-            // Build the data array dynamically based on available columns
-            $questionData = [
-                'exam_id'       => $examId,
-                'question_text' => $request->question_text,
-                'question_type' => $request->question_type,
-                'points'        => $request->points,
-            ];
-
-            // Safely pass correct_answer_text only if provided in request
-            if ($request->filled('correct_answer_text')) {
-                $questionData['correct_answer_text'] = $request->correct_answer_text;
-            }
-
-            // 1. Create Question without 'correct_answer_text'
-            $question = Question::create([
-                'exam_id'       => $examId,
-                'question_text' => $request->question_text,
-                'question_type' => $request->question_type, // 'short_answer' or 'mcq'
-                'points'        => $request->points ?? 1,
-            ]);
-
-            // 2. Save the expected answer/keyword into options table if short answer
-            if ($request->question_type === 'short_answer' && $request->filled('expected_answer')) {
-                QuestionOption::create([
-                    'question_id' => $question->question_id ?? $question->id,
-                    'option_text' => $request->expected_answer,
-                    'is_correct'  => true,
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Question added successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Failed to add question: ' . $e->getMessage());
-        }
-    } */
 
     public function updateClass(Request $request, $id)
     {

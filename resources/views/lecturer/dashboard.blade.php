@@ -43,6 +43,9 @@
                 <button class="nav-link text-start mb-2" id="students-tab" data-bs-toggle="pill" data-bs-target="#tab-students" type="button">
                     <i class="bi bi-people me-2"></i> Manage Students
                 </button>
+                <button class="nav-link text-start mb-2" id="profile-tab" data-bs-toggle="pill" data-bs-target="#tab-profile" type="button">
+                    <i class="bi bi-person-gear me-2"></i> Profile Settings
+                </button>
                 <button class="nav-link text-start mb-2" id="students-violation" data-bs-toggle="pill" data-bs-target="#tab-violation" type="button">
                     <i class="bi bi-exclamation-triangle me-2"></i> Violation
                 </button>
@@ -430,6 +433,58 @@
                                     </div>
                                 @endforeach
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-profile" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white border-0 pt-4 px-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h5>
+                            <p class="text-muted small">Update your personal account details and avatar.</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <form action="{{ route('lecturer.profile.update') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                <div class="row align-items-center mb-4">
+                                    <div class="col-auto">
+                                        <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D6EFD&color=fff' }}" 
+                                            alt="Profile Image" 
+                                            class="rounded-circle img-thumbnail shadow-sm" 
+                                            style="width: 100px; height: 100px; object-fit: cover;">
+                                    </div>
+                                    <div class="col">
+                                        <label for="profile_image" class="form-label fw-semibold">Change Avatar</label>
+                                        <input type="file" class="form-control" id="profile_image" name="profile_image" accept="image/*">
+                                        <div class="form-text">Supported formats: JPG, PNG, GIF (Max 2MB).</div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="name" class="form-label fw-semibold">Full Name</label>
+                                        <input type="text" class="form-control" id="name" name="name" value="{{ Auth::user()->name }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label fw-semibold">Email Address</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ Auth::user()->email }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Staff ID</label>
+                                        <input type="text" class="form-control bg-light" value="{{ $lecturer->staff_id ?? 'N/A' }}" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Role</label>
+                                        <input type="text" class="form-control bg-light text-capitalize" value="{{ Auth::user()->role }}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 text-end">
+                                    <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                        <i class="bi bi-check-lg me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

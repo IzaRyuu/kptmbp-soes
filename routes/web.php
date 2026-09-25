@@ -113,6 +113,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/register', [AdminController::class, 'registerUser'])->name('account.register');
     Route::delete('/admin/user/{id}', [AdminController::class, 'deleteUser'])->name('admin.user.delete');
 
+    Route::post('/lecturer/profile/update', [LecturerController::class, 'updateProfile'])->name('lecturer.profile.update');
+
 
     // Account Creation Route (Shared by Admin & Lecturer)
     Route::post('/account/register', [AccountManagementController::class, 'registerUser'])->name('account.register');

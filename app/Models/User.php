@@ -28,6 +28,7 @@ class User extends Authenticatable
         'role',     // <--- ADDED: Crucial for role routing
         'status',   // <--- ADDED: Needed for account status checks
         'password',
+        'profile_image'
     ];
 
     /**
