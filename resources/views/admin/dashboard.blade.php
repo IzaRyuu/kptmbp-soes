@@ -100,6 +100,19 @@
                             placeholder="e.g. BPNxxxxxxxxx"
                         >
                     </div>
+
+                    <!-- Lecturer Staff ID Field -->
+                    <div id="lecturerFields" class="mb-3" style="display: none;">
+                        <label for="staff_number" class="form-label fw-semibold small text-secondary">Staff Number</label>
+                        <input 
+                            type="text" 
+                            name="staff_number" 
+                            id="staff_number" 
+                            class="form-control" 
+                            placeholder="e.g. STF-2026-001"
+                        >
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Password</label>
                         <input type="password" name="password" class="form-control" required>
@@ -113,12 +126,6 @@
         </div>
     </div>
 </div>
-
-<script>
-function toggleMatricInput(role) {
-    document.getElementById('matricGroup').style.display = (role === 'student') ? 'block' : 'none';
-}
-</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -143,4 +150,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+<script>
+function toggleFormFields(role) {
+    const studentFields = document.getElementById('studentFields');
+    const lecturerFields = document.getElementById('lecturerFields');
+
+    if (role === 'student') {
+        studentFields.style.display = 'block';
+        lecturerFields.style.display = 'none';
+    } else if (role === 'lecturer') {
+        studentFields.style.display = 'none';
+        lecturerFields.style.display = 'block';
+    } else {
+        // Admin selected: hide both specific fields
+        studentFields.style.display = 'none';
+        lecturerFields.style.display = 'none';
+    }
+}
+
+// Trigger on load to set initial state
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('roleSelect');
+    if (roleSelect) {
+        toggleFormFields(roleSelect.value);
+    }
+});
+</script>
+
 @endsection

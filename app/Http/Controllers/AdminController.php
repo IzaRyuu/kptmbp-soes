@@ -31,14 +31,14 @@ class AdminController extends Controller
 
         if ($request->role === 'student') {
             Student::create([
-                'user_id'       => $user->id,
-                // Uses request input or falls back to 'matric_number' / 'matrix_number'
-                'matrix_number' => $request->input('matrix_number') ?? $request->input('matric_number') ?? 'N/A',
+                'user_id'       => $user->user_id ?? $user->id,
+                'matrix_number' => $request->input('matrix_number') ?? $request->input('matric_number'),
             ]);
         } elseif ($request->role === 'lecturer') {
             Lecturer::create([
-                'user_id'  => $user->id,
-                'staff_id' => $request->staff_id ?? 'N/A',
+                'user_id'      => $user->user_id ?? $user->id,
+                'staff_number' => $request->input('staff_number'),
+                'department'   => $request->input('department', 'General'),
             ]);
         }
 
