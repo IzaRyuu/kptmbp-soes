@@ -37,8 +37,8 @@
                 <button class="nav-link active text-start mb-2" id="exams-tab" data-bs-toggle="pill" data-bs-target="#tab-exams" type="button">
                     <i class="bi bi-journal-text me-2"></i> Exam List & CRUD
                 </button>
-                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#lecturerRegisterStudentModal">
-                    <i class="bi bi-person-plus me-1"></i> Register Student
+                <button class="nav-link text-start mb-2" type="button" data-bs-toggle="modal" data-bs-target="#lecturerRegisterStudentModal">
+                    <i class="bi bi-person-plus me-2"></i> Register Student
                 </button>
                 <button class="nav-link text-start mb-2" id="students-tab" data-bs-toggle="pill" data-bs-target="#tab-students" type="button">
                     <i class="bi bi-people me-2"></i> Manage Students
@@ -806,7 +806,17 @@
         </div>
     @endforeach
 @endif
+/* Ensure modal trigger buttons match nav links in dark sidebar */
+.nav-pills .nav-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+}
 
+.nav-pills .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
 <script>
     function toggleEdit(btn) {
         const row = btn.closest('tr');
