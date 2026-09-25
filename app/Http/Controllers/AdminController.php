@@ -59,14 +59,9 @@ class AdminController extends Controller
                 $role   = strtolower($request->role);
 
                 if ($role === 'student') {
-                    $generatedMatric = $request->input('matric_number') 
-                        ?? $request->input('matrix_number') 
-                        ?? 'STU-' . time();
-
                     Student::create([
                         'user_id'       => $userId,
-                        'matrix_number' => $generatedMatric, // Matches your DB column name
-                        'matric_number' => $generatedMatric, // Keeps fallback compatibility
+                        'matric_number' => $request->input('matric_number') ?? $request->input('matrix_number') ?? 'STU-' . time(),
                     ]);
                 } elseif ($role === 'lecturer') {
                     Lecturer::create([
