@@ -906,17 +906,7 @@
         </div>
     @endforeach
 @endif
-/* Ensure modal trigger buttons match nav links in dark sidebar */
-.nav-pills .nav-link {
-    color: rgba(255, 255, 255, 0.75) !important;
-    border-radius: 0.375rem;
-    transition: all 0.2s ease-in-out;
-}
 
-.nav-pills .nav-link:hover {
-    color: #ffffff !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-}
 <script>
     function toggleEdit(btn) {
         const row = btn.closest('tr');
