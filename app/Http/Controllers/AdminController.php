@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\Lecturer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -18,9 +19,22 @@ class AdminController extends Controller
         $totalLecturers = User::where('role', 'lecturer')->count();
         $totalStudents  = User::where('role', 'student')->count();
         $totalUsers     = User::count();
-        $users          = User::orderBy('created_at', 'desc')->get();
+        
+        // Fetch users with related lecturer and student profiles
+        $users = User::with(['lecturer', 'student'])->orderBy('created_at', 'desc')->get();
 
-        return view('admin.dashboard', compact('totalLecturers', 'totalStudents', 'totalUsers', 'users'));
+        // Filter collections for detail modals
+        $lecturers = $users->where('role', 'lecturer');
+        $students  = $users->where('role', 'student');
+
+        return view('admin.dashboard', compact(
+            'totalLecturers', 
+            'totalStudents', 
+            'totalUsers', 
+            'users', 
+            'lecturers', 
+            'students'
+        ));
     }
 
     public function registerUser(Request $request)
@@ -34,7 +48,6 @@ class AdminController extends Controller
 
         try {
             DB::transaction(function () use ($request) {
-                // 1. Create Base User
                 $user = User::create([
                     'name'     => $request->name,
                     'email'    => $request->email,
@@ -45,7 +58,6 @@ class AdminController extends Controller
                 $userId = $user->user_id ?? $user->id;
                 $role   = strtolower($request->role);
 
-                // 2. Create Role Specific Profile
                 if ($role === 'student') {
                     Student::create([
                         'user_id'       => $userId,
@@ -63,6 +75,36 @@ class AdminController extends Controller
             return redirect()->back()->with('success', 'Account registered successfully!');
         } catch (Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Failed to create user: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function deleteUser($id)
+    {
+        try {
+            DB::transaction(function () use ($id) {
+                // Find target user by user_id or id
+                $user = User::where('user_id', $id)->orWhere('id', $id)->firstOrFail();
+
+                // Get current logged-in user's primary key ID safely
+                $currentUserId = Auth::id(); 
+                $targetUserId  = $user->getKey(); // getKey() automatically gets user_id or id
+
+                // Prevent self-deletion
+                if ((string)$currentUserId === (string)$targetUserId) {
+                    throw new Exception("You cannot delete your own active administrator account.");
+                }
+
+                // Delete associated student or lecturer records
+                Student::where('user_id', $targetUserId)->delete();
+                Lecturer::where('user_id', $targetUserId)->delete();
+
+                // Delete main user account
+                $user->delete();
+            });
+
+            return redirect()->back()->with('success', 'User profile deleted successfully!');
+        } catch (Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Delete Failed: ' . $e->getMessage()]);
         }
     }
 }

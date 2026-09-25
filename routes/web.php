@@ -109,6 +109,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::post('/admin/register', [AdminController::class, 'registerUser'])->name('account.register');
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::post('/admin/register', [AdminController::class, 'registerUser'])->name('account.register');
+    Route::delete('/admin/user/{id}', [AdminController::class, 'deleteUser'])->name('admin.user.delete');
 
 
     // Account Creation Route (Shared by Admin & Lecturer)
