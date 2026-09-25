@@ -91,6 +91,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/lecturer/violations/export-pdf/{examId}', [LecturerController::class, 'exportPdf'])
         ->name('lecturer.violations.export-pdf');
 
+    // Admin Dashboard Route
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+
+    // Account Creation Route (Shared by Admin & Lecturer)
+    Route::post('/account/register', [AccountManagementController::class, 'registerUser'])->name('account.register');
+});
+
 Route::middleware(['auth'])->prefix('lecturer')->group(function () {
     Route::delete('/violations/bulk-delete', [LecturerController::class, 'bulkDeleteViolations'])->name('lecturer.violations.bulk-delete');
     Route::delete('/violations/{id}', [LecturerController::class, 'deleteViolation'])->name('lecturer.violations.delete');

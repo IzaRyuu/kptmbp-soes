@@ -37,6 +37,9 @@
                 <button class="nav-link active text-start mb-2" id="exams-tab" data-bs-toggle="pill" data-bs-target="#tab-exams" type="button">
                     <i class="bi bi-journal-text me-2"></i> Exam List & CRUD
                 </button>
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#lecturerRegisterStudentModal">
+                    <i class="bi bi-person-plus me-1"></i> Register Student
+                </button>
                 <button class="nav-link text-start mb-2" id="students-tab" data-bs-toggle="pill" data-bs-target="#tab-students" type="button">
                     <i class="bi bi-people me-2"></i> Manage Students
                 </button>
@@ -243,6 +246,44 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Register Student Modal for Lecturers -->
+                <div class="modal fade" id="lecturerRegisterStudentModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form action="{{ route('account.register') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="role" value="student">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Register New Student</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Student Name</label>
+                                        <input type="text" name="name" class="form-control" placeholder="e.g. MUHAMMAD SHAFIQ" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Student Email (@kptm.edu.my)</label>
+                                        <input type="email" name="email" class="form-control" placeholder="kl2505019076@kptm.edu.my" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Matric Number / Student ID</label>
+                                        <input type="text" name="matric_number" class="form-control" placeholder="e.g. KL2505019076">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Initial Password</label>
+                                        <input type="password" name="password" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Register Student</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

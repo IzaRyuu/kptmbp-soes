@@ -1,105 +1,54 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Lecturer;
-use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\Request;
 
 class GoogleAuthController extends Controller
 {
-    public function redirectToGoogle()
+    public function handleGoogleCallback()
     {
-        return Socialite::driver('google')->redirect();
-    }
+        $googleUser = Socialite::driver('google')->user();
 
-    public function handleGoogleCallback(Request $request)
-    {
-        try {
-            $googleUser = Socialite::driver('google')->user();
-            $email = strtolower($googleUser->getEmail());
+        // 1. Find or create the base User
+        $user = User::where('email', strtolower($googleUser->getEmail()))->first();
 
-            $studentDomain = env('ALLOWED_STUDENT_DOMAIN', 'student.kptm.edu.my');
-            $lecturerDomain = env('ALLOWED_LECTURER_DOMAIN', 'student.uptm.edu.my');
-
-            // 1. Identify Domain & Assign System Role
-            $role = null;
-            if (str_ends_with($email, '@' . $studentDomain)) {
-                $role = 'student';
-            } elseif (str_ends_with($email, '@' . $lecturerDomain)) {
-                $role = 'lecturer';
-            }
-
-            // 2. Reject Unauthorized Domains
-            if (!$role) {
-                return redirect()->route('login')->withErrors([
-                    'email' => "Access denied. Only @{$studentDomain} (Students) and @{$lecturerDomain} (Lecturers) emails are permitted."
-                ]);
-            }
-
-            // 3. Find or Create Base User
-            $user = User::firstOrCreate(
-                ['email' => $email],
-                [
-                    'name' => $googleUser->getName(),
-                    'role' => $role,
-                    'status' => 'active'
-                ]
-            );
-
-            // 4. Check for Account Suspension
-            if ($user->status === 'suspended') {
-                return redirect()->route('login')->withErrors([
-                    'email' => 'Your account is currently suspended. Please contact admin.'
-                ]);
-            }
-
-            // 5. Automatically Sync Sub-Profile Records (Student/Lecturer)
-            if ($role === 'student') {
-                Student::firstOrCreate(
-                    ['user_id' => $user->user_id],
-                    [
-                        'matrix_number' => strtoupper(explode('@', $email)[0]), // e.g. BPJ221010022
-                        'program_code' => 'UNKNOWN' // Updated during profile setup
-                    ]
-                );
-            } elseif ($role === 'lecturer') {
-                Lecturer::firstOrCreate(
-                    ['user_id' => $user->user_id],
-                    [
-                        'staff_number' => strtoupper(explode('@', $email)[0]),
-                        'department' => 'FACULTY'
-                    ]
-                );
-            }
-
-            // 6. Log the User In
-            Auth::login($user);
-
-            // 7. Write to Activity Logs
-            ActivityLog::create([
-                'user_id' => $user->user_id,
-                'event_type' => 'login',
-                'description' => "Logged in successfully as [{$role}] via domain verification.",
-                'ip_address' => $request->ip(),
-            ]);
-
-            // 8. Role-Based Dashboard Redirection
-            return match ($user->role) {
-                'admin' => redirect()->route('admin.dashboard'),
-                'lecturer' => redirect()->route('lecturer.dashboard'),
-                default => redirect()->route('student.dashboard'),
-            };
-
-        } catch (\Exception $e) {
-            return redirect()->route('login')->withErrors([
-                'email' => 'Google Authentication encountered an issue: ' . $e->getMessage()
-            ]);
+        if (!$user) {
+            // Unregistered user attempt
+            return redirect()->route('login')->with('error', 'Your email is not registered in the system. Please contact your lecturer or admin to register your account.');
         }
+
+        // 2. Log the user in
+        Auth::login($user);
+
+        // 3. ROUTING LOGIC: Determine role via database models/role column
+        
+        // Admin Routing
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Lecturer Routing (Checks role column or lecturer relationship)
+        $isLecturer = $user->role === 'lecturer' 
+            || Lecturer::where('user_id', $user->id ?? $user->user_id)->exists();
+
+        if ($isLecturer) {
+            return redirect()->route('lecturer.dashboard');
+        }
+
+        // Student Routing (Checks role column or student relationship)
+        $isStudent = $user->role === 'student' 
+            || Student::where('user_id', $user->id ?? $user->user_id)->exists();
+
+        if ($isStudent) {
+            return redirect()->route('student.dashboard');
+        }
+
+        // Default Fallback
+        return redirect()->route('student.dashboard');
     }
 }
