@@ -83,33 +83,24 @@ class AdminController extends Controller
         }
     }
 
-    public function deleteUser($id)
+    public function destroyUser($id)
     {
         try {
-            DB::transaction(function () use ($id) {
-                // Find target user by user_id or id
-                $user = User::where('user_id', $id)->orWhere('id', $id)->firstOrFail();
+            // Query explicitly by 'user_id' instead of find() or findOrFail()
+            $user = User::where('user_id', $id)->firstOrFail();
 
-                // Get current logged-in user's primary key ID safely
-                $currentUserId = Auth::id(); 
-                $targetUserId  = $user->getKey(); // getKey() automatically gets user_id or id
+            // Delete associated records first if necessary (e.g. Student or Lecturer)
+            if ($user->role === 'student') {
+                Student::where('user_id', $user->user_id)->delete();
+            } elseif ($user->role === 'lecturer') {
+                Lecturer::where('user_id', $user->user_id)->delete();
+            }
 
-                // Prevent self-deletion
-                if ((string)$currentUserId === (string)$targetUserId) {
-                    throw new Exception("You cannot delete your own active administrator account.");
-                }
+            $user->delete();
 
-                // Delete associated student or lecturer records
-                Student::where('user_id', $targetUserId)->delete();
-                Lecturer::where('user_id', $targetUserId)->delete();
-
-                // Delete main user account
-                $user->delete();
-            });
-
-            return redirect()->back()->with('success', 'User profile deleted successfully!');
-        } catch (Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Delete Failed: ' . $e->getMessage()]);
+            return redirect()->back()->with('success', 'User deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Delete Failed: ' . $e->getMessage());
         }
     }
 }
