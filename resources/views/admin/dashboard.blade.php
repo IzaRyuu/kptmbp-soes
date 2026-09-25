@@ -79,6 +79,7 @@
                         <select name="role" id="roleSelect" class="form-select" onchange="toggleMatricInput(this.value)" required>
                             <option value="student">Student</option>
                             <option value="lecturer">Lecturer</option>
+                            <option value="admin">Admin</option>
                         </select>
                     </div>
                     <div class="mb-3">
