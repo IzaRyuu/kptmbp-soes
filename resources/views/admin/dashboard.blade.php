@@ -9,6 +9,26 @@
         </button>
     </div>
 
+    <!-- SUCCESS & ERROR ALERT MESSAGES -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Registration Error:</div>
+            <ul class="mb-0 ps-3 small">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <!-- Quick Stats -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -76,7 +96,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">User Role</label>
-                        <select name="role" id="roleSelect" class="form-select" onchange="toggleMatricInput(this.value)" required>
+                        <select name="role" id="roleSelect" class="form-select" onchange="toggleFormFields(this.value)" required>
                             <option value="student">Student</option>
                             <option value="lecturer">Lecturer</option>
                             <option value="admin">Admin</option>
@@ -90,6 +110,8 @@
                         <label class="form-label small fw-bold">Email (@kptm.edu.my)</label>
                         <input type="email" name="email" class="form-control" placeholder="user@kptm.edu.my" required>
                     </div>
+                    
+                    <!-- Student Matric Number Field -->
                     <div id="studentFields" class="mb-3">
                         <label for="matric_number" class="form-label fw-semibold small text-secondary">Matric Number / Student ID</label>
                         <input 
@@ -101,7 +123,7 @@
                         >
                     </div>
 
-                    <!-- Lecturer Staff ID Field -->
+                    <!-- Lecturer Staff Number Field -->
                     <div id="lecturerFields" class="mb-3" style="display: none;">
                         <label for="staff_number" class="form-label fw-semibold small text-secondary">Staff Number</label>
                         <input 
@@ -115,7 +137,7 @@
 
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <input type="password" name="password" class="form-control" required minlength="6">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -128,48 +150,18 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const roleSelect = document.getElementById('roleSelect');
-    const studentFields = document.getElementById('studentFields');
-    const lecturerFields = document.getElementById('lecturerFields');
-
-    function updateFormFields() {
-        const selectedRole = roleSelect.value;
-
-        if (studentFields) {
-            studentFields.style.display = (selectedRole === 'student') ? 'block' : 'none';
-        }
-        if (lecturerFields) {
-            lecturerFields.style.display = (selectedRole === 'lecturer') ? 'block' : 'none';
-        }
-    }
-
-    if (roleSelect) {
-        roleSelect.addEventListener('change', updateFormFields);
-        updateFormFields(); // Initialize on page/modal load
-    }
-});
-</script>
-
-<script>
 function toggleFormFields(role) {
     const studentFields = document.getElementById('studentFields');
     const lecturerFields = document.getElementById('lecturerFields');
 
-    if (role === 'student') {
-        studentFields.style.display = 'block';
-        lecturerFields.style.display = 'none';
-    } else if (role === 'lecturer') {
-        studentFields.style.display = 'none';
-        lecturerFields.style.display = 'block';
-    } else {
-        // Admin selected: hide both specific fields
-        studentFields.style.display = 'none';
-        lecturerFields.style.display = 'none';
+    if (studentFields) {
+        studentFields.style.display = (role === 'student') ? 'block' : 'none';
+    }
+    if (lecturerFields) {
+        lecturerFields.style.display = (role === 'lecturer') ? 'block' : 'none';
     }
 }
 
-// Trigger on load to set initial state
 document.addEventListener('DOMContentLoaded', function() {
     const roleSelect = document.getElementById('roleSelect');
     if (roleSelect) {

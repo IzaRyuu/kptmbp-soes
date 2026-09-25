@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountManagementController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\LecturerQuestionController;
@@ -105,6 +106,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
+
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::post('/admin/register', [AdminController::class, 'registerUser'])->name('account.register');
+
 
     // Account Creation Route (Shared by Admin & Lecturer)
     Route::post('/account/register', [AccountManagementController::class, 'registerUser'])->name('account.register');
