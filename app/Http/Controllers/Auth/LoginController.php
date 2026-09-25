@@ -52,6 +52,10 @@ class LoginController extends Controller
      */
     protected function redirectUserBasedOnRole($user)
     {
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
         if ($user->role === 'lecturer' || $user->lecturer) {
             return redirect()->route('lecturer.dashboard');
         }
