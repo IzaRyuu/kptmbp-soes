@@ -67,6 +67,7 @@ class AdminController extends Controller
                         'user_id'       => $userId,
                         'matrix_number' => $generatedMatric, // Matches your DB column name
                         'matric_number' => $generatedMatric, // Keeps fallback compatibility
+                        'program_code'   => $request->input('program_code', 'GENERAL'), // Provides default if empty
                     ]);
                 } elseif ($role === 'lecturer') {
                     Lecturer::create([
