@@ -90,9 +90,15 @@
                         <label class="form-label small fw-bold">Email (@kptm.edu.my)</label>
                         <input type="email" name="email" class="form-control" placeholder="user@kptm.edu.my" required>
                     </div>
-                    <div class="mb-3" id="matricGroup">
-                        <label class="form-label small fw-bold">Matric Number / Student ID</label>
-                        <input type="text" name="matric_number" class="form-control" placeholder="e.g. KL2505019076">
+                    <div id="studentFields" class="mb-3">
+                        <label for="matric_number" class="form-label fw-semibold small text-secondary">Matric Number / Student ID</label>
+                        <input 
+                            type="text" 
+                            name="matric_number" 
+                            id="matric_number" 
+                            class="form-control" 
+                            placeholder="e.g. BPNxxxxxxxxx"
+                        >
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Password</label>
