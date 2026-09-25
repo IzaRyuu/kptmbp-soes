@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Models\ActivityLog;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -88,20 +89,34 @@ class LecturerController extends Controller
     {
         $user = Auth::user();
 
-        $request->validate([
+        // Validation rules
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . ($user->user_id ?? $user->id) . ',user_id',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
 
+        // If filling out password fields, validate them
+        if ($request->filled('current_password') || $request->filled('new_password')) {
+            $rules['current_password'] = ['required', 'current_password'];
+            $rules['new_password'] = ['required', 'string', 'min:8', 'confirmed'];
+        }
+
+        $request->validate($rules);
+
+        // Prepare update data
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
         ];
 
+        // Update password if provided
+        if ($request->filled('new_password')) {
+            $updateData['password'] = Hash::make($request->new_password);
+        }
+
         // Handle Profile Picture Upload
         if ($request->hasFile('profile_image')) {
-            // Delete old image if exists
             if ($user->profile_image && Storage::exists('public/' . $user->profile_image)) {
                 Storage::delete('public/' . $user->profile_image);
             }
@@ -110,10 +125,10 @@ class LecturerController extends Controller
             $updateData['profile_image'] = $path;
         }
 
-        // Direct database update using primary key
+        // Direct database update
         User::where('user_id', $user->user_id ?? $user->id)->update($updateData);
 
-        return redirect()->back()->with('success', 'Profile updated successfully.');
+        return redirect()->back()->with('success', 'Profile and password updated successfully.');
     }
 
     public function manageStudents()

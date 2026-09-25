@@ -441,18 +441,40 @@
                     <div class="card border-0 shadow-sm rounded-4">
                         <div class="card-header bg-white border-0 pt-4 px-4">
                             <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h5>
-                            <p class="text-muted small">Update your personal account details and avatar.</p>
+                            <p class="text-muted small">Update your personal account details, avatar, and password.</p>
                         </div>
                         <div class="card-body p-4">
+
+                            {{-- Success & Error Alerts --}}
+                            @if (session('success'))
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
                             <form action="{{ route('lecturer.profile.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                
+                                <!-- Avatar Upload Section -->
                                 <div class="row align-items-center mb-4">
                                     <div class="col-auto">
                                         <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D6EFD&color=fff' }}" 
-                                        alt="Profile Image"    
-                                        class="rounded-circle img-thumbnail shadow-sm" 
-                                        style="width: 100px; height: 100px; object-fit: cover;"
-                                        onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0D6EFD&color=fff';">
+                                            alt="Profile Image" 
+                                            class="rounded-circle img-thumbnail shadow-sm" 
+                                            style="width: 100px; height: 100px; object-fit: cover;"
+                                            onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0D6EFD&color=fff';">
                                     </div>
                                     <div class="col">
                                         <label for="profile_image" class="form-label fw-semibold">Change Avatar</label>
@@ -461,7 +483,8 @@
                                     </div>
                                 </div>
 
-                                <div class="row g-3">
+                                <!-- Account Information -->
+                                <div class="row g-3 mb-4">
                                     <div class="col-md-6">
                                         <label for="name" class="form-label fw-semibold">Full Name</label>
                                         <input type="text" class="form-control" id="name" name="name" value="{{ Auth::user()->name }}" required>
@@ -477,6 +500,27 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Role</label>
                                         <input type="text" class="form-control bg-light text-capitalize" value="{{ Auth::user()->role }}" readonly>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4 text-muted">
+
+                                <!-- Change Password Section -->
+                                <h6 class="fw-bold mb-3"><i class="bi bi-shield-lock me-2 text-warning"></i>Change Password</h6>
+                                <p class="text-muted small">Leave password fields blank if you do not want to change your password.</p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="current_password" class="form-label fw-semibold">Current Password</label>
+                                        <input type="password" class="form-control" id="current_password" name="current_password" placeholder="••••••••">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="new_password" class="form-label fw-semibold">New Password</label>
+                                        <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Min 8 characters">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="new_password_confirmation" class="form-label fw-semibold">Confirm New Password</label>
+                                        <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" placeholder="Repeat new password">
                                     </div>
                                 </div>
 
