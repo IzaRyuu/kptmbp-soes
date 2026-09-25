@@ -3,10 +3,10 @@
 use App\Http\Controllers\AccountManagementController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\LecturerQuestionController;
-use App\Http\Controllers\GoogleAuthController;
 // Optional: Uncomment if you created a separate LecturerQuestionController
 // use App\Http\Controllers\LecturerQuestionController;
 
@@ -19,8 +19,8 @@ Route::get('/', function () {
     return view('auth.login'); 
 })->name('login');
 
-Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'handleGoogleCallback']);
 
 Route::post('/logout', function () {
     Auth::logout();
