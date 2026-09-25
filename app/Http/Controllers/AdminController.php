@@ -83,7 +83,7 @@ class AdminController extends Controller
         }
     }
 
-    public function destroyUser($id)
+    public function deleteUser($id)
     {
         try {
             // Query explicitly by 'user_id' instead of find() or findOrFail()
