@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\AccountManagementController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\LecturerQuestionController;
+use App\Http\Controllers\GoogleAuthController;
 // Optional: Uncomment if you created a separate LecturerQuestionController
 // use App\Http\Controllers\LecturerQuestionController;
 
@@ -98,12 +99,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Account Creation Route (Shared by Admin & Lecturer)
     Route::post('/account/register', [AccountManagementController::class, 'registerUser'])->name('account.register');
-});
-
-Route::middleware(['auth'])->prefix('lecturer')->group(function () {
-    Route::delete('/violations/bulk-delete', [LecturerController::class, 'bulkDeleteViolations'])->name('lecturer.violations.bulk-delete');
-    Route::delete('/violations/{id}', [LecturerController::class, 'deleteViolation'])->name('lecturer.violations.delete');
     });
+
+    Route::middleware(['auth'])->prefix('lecturer')->group(function () {
+        Route::delete('/violations/bulk-delete', [LecturerController::class, 'bulkDeleteViolations'])->name('lecturer.violations.bulk-delete');
+        Route::delete('/violations/{id}', [LecturerController::class, 'deleteViolation'])->name('lecturer.violations.delete');
+        });
 
     // Lecturer Routes Group
     Route::prefix('lecturer')->name('lecturer.')->group(function () {
@@ -139,7 +140,7 @@ Route::middleware(['auth'])->prefix('lecturer')->group(function () {
         Route::delete('/classes/{id}', [LecturerController::class, 'destroyClass'])->name('classes.destroy');
     });
 
-Route::middleware(['auth'])->prefix('lecturer')->name('lecturer.')->group(function () {
+    Route::middleware(['auth'])->prefix('lecturer')->name('lecturer.')->group(function () {
 
         Route::get(
             '/exams/{examId}/questions',
@@ -179,4 +180,3 @@ Route::middleware(['auth'])->prefix('lecturer')->name('lecturer.')->group(functi
         Route::post('/classes/enroll', [StudentController::class, 'confirmEnrollment'])
             ->name('classes.confirm-enroll');
     });
-});
