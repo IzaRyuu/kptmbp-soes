@@ -119,4 +119,28 @@ function toggleMatricInput(role) {
     document.getElementById('matricGroup').style.display = (role === 'student') ? 'block' : 'none';
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const roleSelect = document.getElementById('roleSelect');
+    const studentFields = document.getElementById('studentFields');
+    const lecturerFields = document.getElementById('lecturerFields');
+
+    function updateFormFields() {
+        const selectedRole = roleSelect.value;
+
+        if (studentFields) {
+            studentFields.style.display = (selectedRole === 'student') ? 'block' : 'none';
+        }
+        if (lecturerFields) {
+            lecturerFields.style.display = (selectedRole === 'lecturer') ? 'block' : 'none';
+        }
+    }
+
+    if (roleSelect) {
+        roleSelect.addEventListener('change', updateFormFields);
+        updateFormFields(); // Initialize on page/modal load
+    }
+});
+</script>
 @endsection
