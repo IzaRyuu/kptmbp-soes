@@ -89,34 +89,13 @@ class AdminController extends Controller
         }
     }
 
-    // Update User Profile Details
-    public function updateUser(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
-        ]);
-
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
-
-        // Update role specific table
-        if ($user->role === 'student' && $user->student) {
-            $user->student->update(['matric_number' => $request->matric_number]);
-        } elseif ($user->role === 'lecturer' && $user->lecturer) {
-            $user->lecturer->update(['staff_number' => $request->staff_number]);
-        }
-
-        return redirect()->back()->with('success', 'User details updated successfully.');
-    }
-
     // Reset User Password
     public function resetPassword(Request $request, $id)
     {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -128,13 +107,44 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Password reset successfully for ' . $user->name);
     }
 
+    // Update User Profile Details
+    public function updateUser(Request $request, $id)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . ($user->user_id ?? $user->id) . ',' . ($user->user_id ? 'user_id' : 'id'),
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        if ($user->role === 'student' && $user->student) {
+            $user->student->update(['matric_number' => $request->matric_number]);
+        } elseif ($user->role === 'lecturer' && $user->lecturer) {
+            $user->lecturer->update(['staff_number' => $request->staff_number]);
+        }
+
+        return redirect()->back()->with('success', 'User details updated successfully.');
+    }
+
     // Delete User
     public function deleteUser($id)
     {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $user = User::findOrFail($id);
         $userName = $user->name;
 
-        // Delete linked student/lecturer profile if exists
         if ($user->student) $user->student->delete();
         if ($user->lecturer) $user->lecturer->delete();
 
