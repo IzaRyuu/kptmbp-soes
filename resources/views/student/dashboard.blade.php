@@ -49,7 +49,11 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark shadow border-0" aria-labelledby="studentMenuDropdown">
                         <li>
-                            <a class="dropdown-item py-2 active" id="tab-dashboard-link" data-bs-toggle="tab" href="#tab-dashboard">
+                            <a class="dropdown-item py-2 active" 
+                            id="tab-dashboard-link" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-dashboard" 
+                            href="#tab-dashboard">
                                 <i class="bi bi-speedometer2 me-2"></i> Student Dashboard
                             </a>
                         </li>
@@ -61,7 +65,11 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item py-2" id="tab-profile-link" data-bs-toggle="tab" href="#tab-profile">
+                            <a class="dropdown-item py-2" 
+                            id="tab-profile-link" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-profile" 
+                            href="#tab-profile">
                                 <i class="bi bi-person-gear me-2"></i> My Profile
                             </a>
                         </li>
