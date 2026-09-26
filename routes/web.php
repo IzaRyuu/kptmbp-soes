@@ -121,6 +121,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware(['auth'])->prefix('lecturer')->group(function () {
+        Route::get('/dashboard', [LecturerController::class, 'index'])->name('lecturer.dashboard');
+        Route::post('/profile/update', [LecturerController::class, 'updateProfile'])->name('lecturer.profile.update');
         Route::delete('/violations/bulk-delete', [LecturerController::class, 'bulkDeleteViolations'])->name('lecturer.violations.bulk-delete');
         Route::delete('/violations/{id}', [LecturerController::class, 'deleteViolation'])->name('lecturer.violations.delete');
         });
@@ -130,8 +132,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Dashboard
         Route::get('/dashboard', [LecturerController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard', [LecturerController::class, 'index'])->name('lecturer.dashboard');
-        Route::post('/profile/update', [LecturerController::class, 'updateProfile'])->name('lecturer.profile.update');
+        
 
         // Exam CRUD Routes
         Route::post('/exams', [LecturerController::class, 'storeExam'])->name('exams.store');
