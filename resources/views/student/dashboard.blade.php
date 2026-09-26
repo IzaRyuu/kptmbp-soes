@@ -68,88 +68,6 @@
                 </li>
             </ul>
 
-            <!-- PROFILE TAB -->
-            <div class="tab-pane fade" id="tab-profile" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 mt-3">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h5>
-                        <p class="text-muted small">Update your name, matric number, and security credentials.</p>
-                    </div>
-                    <div class="card-body p-4">
-
-                        {{-- Alerts --}}
-                        @if (session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
-
-                        @if ($errors->any())
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('student.profile.update') }}" method="POST">
-                            @csrf
-
-                            <!-- Personal Information -->
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                    <label for="name" class="form-label fw-semibold">Full Name</label>
-                                    <input type="text" class="form-control" id="name" name="name" value="{{ Auth::user()->name }}" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="matric_number" class="form-label fw-semibold">Matric Number</label>
-                                    <input type="text" class="form-control" id="matric_number" name="matric_number" value="{{ $student->matric_number ?? 'N/A' }}" required>
-                                </div>
-
-                                <div class="col-md-12">
-                                    <label class="form-label fw-semibold">Email Address</label>
-                                    <input type="email" class="form-control bg-light" value="{{ Auth::user()->email }}" readonly>
-                                    <div class="form-text">Domain Verified: @student.kptm.edu.my</div>
-                                </div>
-                            </div>
-
-                            <hr class="my-4 text-muted">
-
-                            <!-- Password Change Section -->
-                            <h6 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2 text-warning"></i>Change Password</h6>
-                            <p class="text-muted small mb-3">Leave blank if you do not wish to change your password.</p>
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="current_password" class="form-label fw-semibold">Current Password</label>
-                                    <input type="password" class="form-control" id="current_password" name="current_password" placeholder="••••••••">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="new_password" class="form-label fw-semibold">New Password</label>
-                                    <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Min 8 characters">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="new_password_confirmation" class="form-label fw-semibold">Confirm New Password</label>
-                                    <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" placeholder="Repeat new password">
-                                </div>
-                            </div>
-
-                            <div class="mt-4 text-end">
-                                <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                                    <i class="bi bi-check-lg me-1"></i> Save Changes
-                                </button>
-                            </div>
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-
             <!-- Right Side: User Credentials & Logout -->
             <div class="d-flex align-items-center gap-3">
                 <span class="text-white small text-end d-none d-md-inline fw-semibold">
@@ -163,6 +81,88 @@
                         <i class="bi bi-box-arrow-right"></i> Logout
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- PROFILE TAB -->
+        <div class="tab-pane fade" id="tab-profile" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 mt-3">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h5>
+                    <p class="text-muted small">Update your name, matric number, and security credentials.</p>
+                </div>
+                <div class="card-body p-4">
+
+                    {{-- Alerts --}}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('student.profile.update') }}" method="POST">
+                        @csrf
+
+                        <!-- Personal Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label fw-semibold">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ Auth::user()->name }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="matric_number" class="form-label fw-semibold">Matric Number</label>
+                                <input type="text" class="form-control" id="matric_number" name="matric_number" value="{{ $student->matric_number ?? 'N/A' }}" required>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">Email Address</label>
+                                <input type="email" class="form-control bg-light" value="{{ Auth::user()->email }}" readonly>
+                                <div class="form-text">Domain Verified: @student.kptm.edu.my</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 text-muted">
+
+                        <!-- Password Change Section -->
+                        <h6 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2 text-warning"></i>Change Password</h6>
+                        <p class="text-muted small mb-3">Leave blank if you do not wish to change your password.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="current_password" class="form-label fw-semibold">Current Password</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password" placeholder="••••••••">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="new_password" class="form-label fw-semibold">New Password</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Min 8 characters">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="new_password_confirmation" class="form-label fw-semibold">Confirm New Password</label>
+                                <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" placeholder="Repeat new password">
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-end">
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="bi bi-check-lg me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
             </div>
         </div>
     </div>
