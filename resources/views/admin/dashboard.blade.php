@@ -336,7 +336,7 @@
     <div class="modal fade" id="editUserModal{{ $usr->user_id ?? $usr->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{ route('admin.users.update', $user->user_id) }}" method="POST">
+                <form action="{{ route('admin.users.update', $usr->user_id ?? $usr->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
