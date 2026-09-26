@@ -214,3 +214,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/profile/update', [StudentController::class, 'updateProfile'])
             ->name('student.profile.update');
     });
+
+    Route::middleware(['auth', 'admin'])->group(function () {
+        // Admin Dashboard User Management Actions
+        Route::put('/admin/users/{id}/update', [App\Http\Controllers\AdminController::class, 'updateUser'])->name('admin.users.update');
+        Route::put('/admin/users/{id}/reset-password', [App\Http\Controllers\AdminController::class, 'resetPassword'])->name('admin.users.resetPassword');
+        Route::delete('/admin/users/{id}/delete', [App\Http\Controllers\AdminController::class, 'deleteUser'])->name('admin.users.delete');
+    });

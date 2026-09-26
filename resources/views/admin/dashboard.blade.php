@@ -220,7 +220,7 @@
 
 <!-- MODAL: Lecturers Detail List -->
 <div class="modal fade" id="lecturersModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold"><i class="bi bi-person-badge me-2"></i>Lecturers Directory</h5>
@@ -234,6 +234,7 @@
                             <th>Email</th>
                             <th>Staff Number</th>
                             <th>Department</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -243,9 +244,29 @@
                                 <td>{{ $lec->email }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ $lec->lecturer->staff_number ?? 'N/A' }}</span></td>
                                 <td>{{ $lec->lecturer->department ?? 'General' }}</td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <!-- Edit Button -->
+                                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $lec->user_id ?? $lec->id }}">
+                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        </button>
+                                        <!-- Reset Password Button -->
+                                        <button class="btn btn-outline-warning text-dark" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ $lec->user_id ?? $lec->id }}">
+                                            <i class="bi bi-key me-1"></i>Password
+                                        </button>
+                                        <!-- Delete Button -->
+                                        <form action="{{ route('admin.users.delete', $lec->user_id ?? $lec->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ $lec->name }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center py-4 text-muted">No registered lecturers found.</td></tr>
+                            <tr><td colspan="5" class="text-center py-4 text-muted">No registered lecturers found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -256,7 +277,7 @@
 
 <!-- MODAL: Students Detail List -->
 <div class="modal fade" id="studentsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title fw-bold"><i class="bi bi-mortarboard me-2"></i>Students Directory</h5>
@@ -269,6 +290,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Matric Number</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -277,9 +299,29 @@
                                 <td class="fw-bold">{{ $stu->name }}</td>
                                 <td>{{ $stu->email }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ $stu->student->matric_number ?? $stu->student->matrix_number ?? 'N/A' }}</span></td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <!-- Edit Button -->
+                                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $stu->user_id ?? $stu->id }}">
+                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        </button>
+                                        <!-- Reset Password Button -->
+                                        <button class="btn btn-outline-warning text-dark" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ $stu->user_id ?? $stu->id }}">
+                                            <i class="bi bi-key me-1"></i>Password
+                                        </button>
+                                        <!-- Delete Button -->
+                                        <form action="{{ route('admin.users.delete', $stu->user_id ?? $stu->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ $stu->name }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="text-center py-4 text-muted">No registered students found.</td></tr>
+                            <tr><td colspan="4" class="text-center py-4 text-muted">No registered students found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -287,6 +329,80 @@
         </div>
     </div>
 </div>
+
+<!-- DYNAMIC ACTION MODALS FOR EDIT & RESET PASSWORD -->
+@foreach($users as $usr)
+    <!-- EDIT USER MODAL -->
+    <div class="modal fade" id="editUserModal{{ $usr->user_id ?? $usr->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ route('admin.users.update', $usr->user_id ?? $usr->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Edit {{ ucfirst($usr->role) }} Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ $usr->name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ $usr->email }}" required>
+                        </div>
+                        @if($usr->role === 'student')
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Matric Number</label>
+                                <input type="text" name="matric_number" class="form-control" value="{{ $usr->student->matric_number ?? '' }}">
+                            </div>
+                        @elseif($usr->role === 'lecturer')
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Staff Number</label>
+                                <input type="text" name="staff_number" class="form-control" value="{{ $usr->lecturer->staff_number ?? '' }}">
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESET PASSWORD MODAL -->
+    <div class="modal fade" id="resetPasswordModal{{ $usr->user_id ?? $usr->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ route('admin.users.resetPassword', $usr->user_id ?? $usr->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-key-fill me-2"></i>Reset Password for {{ $usr->name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">New Password</label>
+                            <input type="password" name="password" class="form-control" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Confirm New Password</label>
+                            <input type="password" name="password_confirmation" class="form-control" required minlength="6">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold">Reset Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 <!-- MODAL: Register New User -->
 <div class="modal fade" id="registerUserModal" tabindex="-1" aria-hidden="true">

@@ -89,62 +89,57 @@ class AdminController extends Controller
         }
     }
 
+    // Update User Profile Details
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $admin = Auth::user();
 
-        // 1. Audit Logging BEFORE updating target user
-        $actorName = $admin ? $admin->name : 'System Admin';
-        $targetUserId = is_object($user) ? ($user->user_id ?? $user->id ?? 0) : 0;
-        $targetUserName = is_object($user) ? ($user->name ?? 'Unknown') : 'Unknown';
-        $userRole = ucfirst(is_object($user) ? ($user->role ?? 'User') : 'User');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
+        ]);
 
-        $fieldsToTrack = ['name', 'email', 'role'];
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
 
-        foreach ($fieldsToTrack as $field) {
-            if ($request->filled($field)) {
-                $oldVal = is_object($user) ? ($user->$field ?? 'N/A') : 'N/A';
-                $newVal = $request->input($field);
-
-                if ((string)$oldVal !== (string)$newVal) {
-                    ProfileAuditLog::create([
-                        'user_id'         => $targetUserId,
-                        'user_name'       => $targetUserName,
-                        'user_role'       => $userRole,
-                        'changed_field'   => strtoupper(str_replace('_', ' ', $field)),
-                        'old_value'       => (string)$oldVal,
-                        'new_value'       => (string)$newVal,
-                        'changed_by_name' => $actorName,
-                    ]);
-                }
-            }
+        // Update role specific table
+        if ($user->role === 'student' && $user->student) {
+            $user->student->update(['matric_number' => $request->matric_number]);
+        } elseif ($user->role === 'lecturer' && $user->lecturer) {
+            $user->lecturer->update(['staff_number' => $request->staff_number]);
         }
 
-        // 2. Perform actual update
-        $user->update($request->all());
-
-        return redirect()->back()->with('success', 'User details updated and change logged.');
+        return redirect()->back()->with('success', 'User details updated successfully.');
     }
 
+    // Reset User Password
+    public function resetPassword(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return redirect()->back()->with('success', 'Password reset successfully for ' . $user->name);
+    }
+
+    // Delete User
     public function deleteUser($id)
     {
-        try {
-            // Query explicitly by 'user_id' instead of find() or findOrFail()
-            $user = User::where('user_id', $id)->firstOrFail();
+        $user = User::findOrFail($id);
+        $userName = $user->name;
 
-            // Delete associated records first if necessary (e.g. Student or Lecturer)
-            if ($user->role === 'student') {
-                Student::where('user_id', $user->user_id)->delete();
-            } elseif ($user->role === 'lecturer') {
-                Lecturer::where('user_id', $user->user_id)->delete();
-            }
+        // Delete linked student/lecturer profile if exists
+        if ($user->student) $user->student->delete();
+        if ($user->lecturer) $user->lecturer->delete();
 
-            $user->delete();
+        $user->delete();
 
-            return redirect()->back()->with('success', 'User deleted successfully.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Delete Failed: ' . $e->getMessage());
-        }
+        return redirect()->back()->with('success', 'User "' . $userName . '" has been deleted.');
     }
 }
