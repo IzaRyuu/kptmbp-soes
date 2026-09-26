@@ -3,22 +3,29 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+
 class ProfileController extends Controller
 {
     public function edit()
     {
-        $user = auth()->user();
-        $student = $user->student; // assumes User HasOne Student relation
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Fetch student record matching the user_id
+        $student = Student::where('user_id', $user->user_id ?? $user->id)->first();
 
         return view('student.profile', compact('user', 'student'));
     }
 
     public function update(Request $request)
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -27,7 +34,6 @@ class ProfileController extends Controller
             'new_password' => 'nullable|min:8|confirmed',
         ]);
 
-        // Check current password if attempting to change password
         if ($request->filled('current_password')) {
             if (!Hash::check($request->current_password, $user->password)) {
                 return back()->withErrors(['current_password' => 'Current password does not match.']);
@@ -38,11 +44,10 @@ class ProfileController extends Controller
         $user->name = $request->name;
         $user->save();
 
-        if ($user->student) {
-            $user->student->update([
-                'matric_number' => $request->matric_number,
-            ]);
-        }
+        Student::updateOrCreate(
+            ['user_id' => $user->user_id ?? $user->id],
+            ['matric_number' => $request->matric_number]
+        );
 
         return back()->with('success', 'Profile updated successfully!');
     }
