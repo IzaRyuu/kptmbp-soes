@@ -38,6 +38,11 @@ class LecturerController extends Controller
                 'department'   => 'Computer Science'
             ]
         );
+        
+        // Prevent "property on null" error if session expired due to idle time
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Your session has expired due to inactivity. Please log in again.');
+        }
 
         // Fetch classes using lecturer_id to match database constraints
         $assignedClasses = Classes::where('lecturer_id', $lecturer->lecturer_id)
