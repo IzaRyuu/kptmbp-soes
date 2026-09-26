@@ -9,6 +9,7 @@ use App\Models\Classes;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\Student;
+use App\Models\ProfileAuditLog;
 use App\Models\ActivityLog;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class LecturerController extends Controller
                 'department'   => 'Computer Science'
             ]
         );
-        
+
         // Prevent "property on null" error if session expired due to idle time
         if (!$user) {
             return redirect()->route('login')->with('error', 'Your session has expired due to inactivity. Please log in again.');
@@ -145,6 +146,37 @@ class LecturerController extends Controller
                 'staff_no'     => $staffValue,
             ]
         );
+
+        // Safely get authenticated user name
+        $currentUser = Auth::user();
+        $actorName = $currentUser ? $currentUser->name : 'System Admin';
+
+        // Extract user ID safely
+        $targetUserId = is_object($user) ? ($user->user_id ?? $user->id ?? 0) : ($user['user_id'] ?? $user['id'] ?? 0);
+        $targetUserName = is_object($user) ? ($user->name ?? 'Unknown') : ($user['name'] ?? 'Unknown');
+        $userRole = ucfirst(is_object($user) ? ($user->role ?? 'User') : ($user['role'] ?? 'User'));
+
+        $fieldsToTrack = ['name', 'email', 'staff_id', 'student_id', 'matric_no'];
+
+        foreach ($fieldsToTrack as $field) {
+            if ($request->filled($field)) {
+                // Read old value safely
+                $oldVal = is_object($user) ? ($user->$field ?? 'N/A') : ($user[$field] ?? 'N/A');
+                $newVal = $request->input($field);
+
+                if ((string)$oldVal !== (string)$newVal) {
+                    ProfileAuditLog::create([
+                        'user_id'         => $targetUserId,
+                        'user_name'       => $targetUserName,
+                        'user_role'       => $userRole,
+                        'changed_field'   => strtoupper(str_replace('_', ' ', $field)),
+                        'old_value'       => (string)$oldVal,
+                        'new_value'       => (string)$newVal,
+                        'changed_by_name' => $actorName,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->back()->with('success', 'Profile and Staff ID updated successfully.');
     }

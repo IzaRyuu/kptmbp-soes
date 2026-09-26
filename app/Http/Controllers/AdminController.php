@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Lecturer;
+use App\Models\ProfileAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -16,9 +17,12 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalLecturers = User::where('role', 'lecturer')->count();
-        $totalStudents  = User::where('role', 'student')->count();
-        $totalUsers     = User::count();
+        $totalLecturers = \App\Models\Lecturer::count();
+        $totalStudents  = \App\Models\Student::count();
+        $totalUsers     = \App\Models\User::count();
+
+        // Fetch latest profile audit logs
+        $auditLogs = ProfileAuditLog::orderBy('created_at', 'desc')->paginate(10);
         
         // Fetch users with related lecturer and student profiles
         $users = User::with(['lecturer', 'student'])->orderBy('created_at', 'desc')->get();
@@ -33,7 +37,8 @@ class AdminController extends Controller
             'totalUsers', 
             'users', 
             'lecturers', 
-            'students'
+            'students',
+            'auditLogs'
         ));
     }
 
@@ -81,6 +86,44 @@ class AdminController extends Controller
         } catch (Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Failed to create user: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $admin = Auth::user();
+
+        // 1. Audit Logging BEFORE updating target user
+        $actorName = $admin ? $admin->name : 'System Admin';
+        $targetUserId = is_object($user) ? ($user->user_id ?? $user->id ?? 0) : 0;
+        $targetUserName = is_object($user) ? ($user->name ?? 'Unknown') : 'Unknown';
+        $userRole = ucfirst(is_object($user) ? ($user->role ?? 'User') : 'User');
+
+        $fieldsToTrack = ['name', 'email', 'role'];
+
+        foreach ($fieldsToTrack as $field) {
+            if ($request->filled($field)) {
+                $oldVal = is_object($user) ? ($user->$field ?? 'N/A') : 'N/A';
+                $newVal = $request->input($field);
+
+                if ((string)$oldVal !== (string)$newVal) {
+                    ProfileAuditLog::create([
+                        'user_id'         => $targetUserId,
+                        'user_name'       => $targetUserName,
+                        'user_role'       => $userRole,
+                        'changed_field'   => strtoupper(str_replace('_', ' ', $field)),
+                        'old_value'       => (string)$oldVal,
+                        'new_value'       => (string)$newVal,
+                        'changed_by_name' => $actorName,
+                    ]);
+                }
+            }
+        }
+
+        // 2. Perform actual update
+        $user->update($request->all());
+
+        return redirect()->back()->with('success', 'User details updated and change logged.');
     }
 
     public function deleteUser($id)

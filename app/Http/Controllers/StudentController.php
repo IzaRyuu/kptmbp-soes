@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\StudentAnswer;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Models\ProfileAuditLog;
 use App\Models\ExamViolation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Hash;
@@ -90,40 +91,67 @@ class StudentController extends Controller
 
     public function updateProfile(Request $request)
     {
-        // Ensure student is logged in
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Session expired. Please log in.');
-        }
-
         $user = Auth::user();
 
-        // Validation
-        $rules = [
-            'name' => 'required|string|max:255',
-            'matric_number' => 'required|string|max:50',
-        ];
-
-        // If changing password, validate password fields
-        if ($request->filled('current_password') || $request->filled('new_password')) {
-            $rules['current_password'] = ['required', 'current_password'];
-            $rules['new_password'] = ['required', 'string', 'min:8', 'confirmed'];
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not authenticated.');
         }
 
-        $request->validate($rules);
+        // Determine the user's primary ID safely
+        $userId = is_object($user) ? ($user->user_id ?? $user->id ?? null) : null;
 
-        // 1. Update User Table (Name & optional Password)
-        $userUpdate = ['name' => $request->name];
-        if ($request->filled('new_password')) {
-            $userUpdate['password'] = Hash::make($request->new_password);
+        if (!$userId) {
+            return redirect()->back()->with('error', 'Unable to determine user ID.');
         }
-        User::where('user_id', $user->user_id ?? $user->id)->update($userUpdate);
 
-        // 2. Update Student Table (Matric Number)
-        Student::where('user_id', $user->user_id ?? $user->id)->update([
-            'matric_number' => $request->matric_number
-        ]);
+        // 1. Audit Logging BEFORE updating database
+        $actorName = is_object($user) ? ($user->name ?? 'System Admin') : 'System Admin';
+        $targetUserName = is_object($user) ? ($user->name ?? 'Unknown') : 'Unknown';
+        $userRole = ucfirst(is_object($user) ? ($user->role ?? 'Student') : 'Student');
 
-        return redirect()->back()->with('success', 'Profile and password updated successfully.');
+        $fieldsToTrack = ['name', 'email', 'student_id', 'matric_no'];
+
+        foreach ($fieldsToTrack as $field) {
+            if ($request->filled($field)) {
+                $oldVal = is_object($user) ? ($user->$field ?? 'N/A') : 'N/A';
+                $newVal = $request->input($field);
+
+                if ((string)$oldVal !== (string)$newVal) {
+                    ProfileAuditLog::create([
+                        'user_id'         => $userId,
+                        'user_name'       => $targetUserName,
+                        'user_role'       => $userRole,
+                        'changed_field'   => strtoupper(str_replace('_', ' ', $field)),
+                        'old_value'       => (string)$oldVal,
+                        'new_value'       => (string)$newVal,
+                        'changed_by_name' => $actorName,
+                    ]);
+                }
+            }
+        }
+
+        // 2. Prepare payload for raw DB query
+        $updateData = [];
+        if ($request->filled('name')) {
+            $updateData['name'] = $request->input('name');
+        }
+        if ($request->filled('email')) {
+            $updateData['email'] = $request->input('email');
+        }
+
+        // 3. Update database using direct DB query (bypasses Eloquent model issues)
+        if (!empty($updateData)) {
+            $updateData['updated_at'] = now();
+
+            // Dynamically detects whether primary key is 'user_id' or 'id'
+            $primaryKey = isset($user->user_id) ? 'user_id' : 'id';
+
+            DB::table('users')
+                ->where($primaryKey, $userId)
+                ->update($updateData);
+        }
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
     /**
