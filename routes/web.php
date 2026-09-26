@@ -202,6 +202,9 @@ Route::middleware(['auth'])->group(function () {
             
         Route::post('/classes/enroll', [StudentController::class, 'confirmEnrollment'])
             ->name('classes.confirm-enroll');
+
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
 
     Route::middleware(['auth'])->prefix('student')->group(function () {
@@ -210,13 +213,4 @@ Route::middleware(['auth'])->group(function () {
         // Add Profile Update Route
         Route::post('/profile/update', [StudentController::class, 'updateProfile'])
             ->name('student.profile.update');
-    });
-
-    Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
-    
-        // Existing student routes...
-
-        // Student Profile Routes
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
