@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\LecturerQuestionController;
+use App\Http\Controllers\Student\ProfileController;
 // Optional: Uncomment if you created a separate LecturerQuestionController
 // use App\Http\Controllers\LecturerQuestionController;
 
@@ -209,4 +210,9 @@ Route::middleware(['auth'])->group(function () {
         // Add Profile Update Route
         Route::post('/profile/update', [StudentController::class, 'updateProfile'])
             ->name('student.profile.update');
+        // Profile Routes
+        Route::get('/profile', [ProfileController::class, 'edit'])
+            ->name('profile.edit');
+        Route::post('/profile', [ProfileController::class, 'update'])
+            ->name('profile.update');
     });
