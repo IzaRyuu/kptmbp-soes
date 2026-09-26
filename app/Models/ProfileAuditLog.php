@@ -9,13 +9,8 @@ class ProfileAuditLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'user_name',
-        'user_role',
-        'changed_field',
-        'old_value',
-        'new_value',
-        'changed_by_name',
-    ];
+    protected $table = 'profile_audit_logs';
+
+    // Allow all mass assignment fields
+    protected $guarded = [];
 }

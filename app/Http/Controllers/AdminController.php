@@ -164,16 +164,18 @@ class AdminController extends Controller
             }
         }
 
-        // Insert into profile_audit_logs with all non-null fields
+        // Insert log record with all column variations provided
         if (!empty($changes)) {
             ProfileAuditLog::create([
-                'user_id'       => $user->user_id,
-                'user_name'     => $user->name,
-                'user_email'    => $user->email,
-                'role'          => $user->role,
-                'action'        => 'Profile details updated by Admin (' . Auth::user()->name . ')',
-                'changes'       => implode(', ', $changes),
-                'updated_by'    => Auth::user()->name ?? 'System Administrator',
+                'user_id'    => $user->user_id,
+                'user_name'  => $user->name,
+                'user_email' => $user->email,
+                'user_role'  => $user->role,
+                'role'       => $user->role,
+                'action'     => 'Profile details updated by Admin (' . Auth::user()->name . ')',
+                'changes'    => implode(', ', $changes),
+                'details'    => implode(', ', $changes),
+                'updated_by' => Auth::user()->name ?? 'System Administrator',
             ]);
         }
 
