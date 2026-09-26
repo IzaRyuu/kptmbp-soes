@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 namespace App\Http\Controllers\Student;
 
@@ -16,7 +16,7 @@ class ProfileController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Fetch student record matching the user_id
+        // Get student record linked to current user
         $student = Student::where('user_id', $user->user_id ?? $user->id)->first();
 
         return view('student.profile', compact('user', 'student'));
@@ -44,9 +44,16 @@ class ProfileController extends Controller
         $user->name = $request->name;
         $user->save();
 
+        // Save matric number across possible database column names
+        $matricValue = $request->input('matric_number');
+
         Student::updateOrCreate(
             ['user_id' => $user->user_id ?? $user->id],
-            ['matric_number' => $request->matric_number]
+            [
+                'matric_number' => $matricValue,
+                'matrix_number' => $matricValue,
+                'matric_no'     => $matricValue,
+            ]
         );
 
         return back()->with('success', 'Profile updated successfully!');

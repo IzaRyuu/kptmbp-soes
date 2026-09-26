@@ -110,9 +110,17 @@
                                 <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Matric Number</label>
-                                <input type="text" class="form-control" name="matric_number" value="{{ old('matric_number', $student->matric_number ?? '') }}" required>
+                            <div class="col-md-6 mb-3">
+                                <label for="matric_number" class="form-label font-weight-bold">Matric Number</label>
+                                <input 
+                                    type="text" 
+                                    id="matric_number" 
+                                    name="matric_number" 
+                                    class="form-control" 
+                                    placeholder="e.g. BP0722001"
+                                    value="{{ old('matric_number', $student->matric_number ?? $student->matrix_number ?? $student->matric_no ?? '') }}" 
+                                    required
+                                >
                             </div>
 
                             <div class="col-md-12">
