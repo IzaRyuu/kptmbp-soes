@@ -17,19 +17,20 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalLecturers = \App\Models\Lecturer::count();
-        $totalStudents  = \App\Models\Student::count();
-        $totalUsers     = \App\Models\User::count();
-
-        // Fetch latest profile audit logs
-        $auditLogs = ProfileAuditLog::orderBy('created_at', 'desc')->paginate(10);
-        
         // Fetch users with related lecturer and student profiles
         $users = User::with(['lecturer', 'student'])->orderBy('created_at', 'desc')->get();
 
         // Filter collections for detail modals
         $lecturers = $users->where('role', 'lecturer');
         $students  = $users->where('role', 'student');
+
+        // Dynamically calculate counts based on actual filtered user records
+        $totalLecturers = $lecturers->count();
+        $totalStudents  = $students->count();
+        $totalUsers     = \App\Models\User::count();
+
+        // Fetch latest profile audit logs
+        $auditLogs = ProfileAuditLog::orderBy('created_at', 'desc')->paginate(10);
 
         return view('admin.dashboard', compact(
             'totalLecturers', 
