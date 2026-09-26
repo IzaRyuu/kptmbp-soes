@@ -107,32 +107,48 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Password reset successfully for ' . $user->name);
     }
 
-    // Update User Profile Details
     public function updateUser(Request $request, $id)
     {
-        if (Auth::user()->role !== 'admin') {
+        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'lecturer') {
             abort(403, 'Unauthorized action.');
         }
 
-        $user = User::findOrFail($id);
+        // Find user by primary key (supports both user_id and id)
+        $user = User::where('user_id', $id)->orWhere('id', $id)->firstOrFail();
 
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . ($user->user_id ?? $user->id) . ',' . ($user->user_id ? 'user_id' : 'id'),
         ]);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
+        // Update User table
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->save();
 
+        // Update Student table if applicable
         if ($user->role === 'student' && $user->student) {
-            $user->student->update(['matric_number' => $request->matric_number]);
-        } elseif ($user->role === 'lecturer' && $user->lecturer) {
-            $user->lecturer->update(['staff_number' => $request->staff_number]);
+            $student = $user->student;
+            if ($request->filled('matric_number')) {
+                // Update whichever column exists on the model
+                if (array_key_exists('matric_number', $student->getAttributes()) || isset($student->matric_number)) {
+                    $student->matric_number = $request->matric_number;
+                } else {
+                    $student->matrix_number = $request->matric_number;
+                }
+                $student->save();
+            }
+        } 
+        // Update Lecturer table if applicable
+        elseif ($user->role === 'lecturer' && $user->lecturer) {
+            $lecturer = $user->lecturer;
+            if ($request->filled('staff_number')) {
+                $lecturer->staff_number = $request->staff_number;
+                $lecturer->save();
+            }
         }
 
-        return redirect()->back()->with('success', 'User details updated successfully.');
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
     // Delete User
