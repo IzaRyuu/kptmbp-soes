@@ -130,6 +130,8 @@ Route::middleware(['auth'])->group(function () {
         
         // Dashboard
         Route::get('/dashboard', [LecturerController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [LecturerController::class, 'index'])->name('lecturer.dashboard');
+        Route::post('/profile/update', [LecturerController::class, 'updateProfile'])->name('lecturer.profile.update');
 
         // Exam CRUD Routes
         Route::post('/exams', [LecturerController::class, 'storeExam'])->name('exams.store');

@@ -27,17 +27,16 @@ class LecturerController extends Controller
     // 1. Dashboard View with Exam List
     public function index()
     {
-        $user = Auth::user();
-        $userId = $user->user_id ?? $user->id;
+        // 1. Guard against null session
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Your session expired. Please log in again.');
+        }
 
-        // Get or Create Lecturer profile safely
-        $lecturer = Lecturer::firstOrCreate(
-            ['user_id' => $userId],
-            [
-                'staff_number' => 'LEC-' . sprintf('%04d', $userId),
-                'department'   => 'Computer Science'
-            ]
-        );
+        $user = Auth::user();
+
+        // 2. Safely find lecturer profile or fallback gracefully
+        $lecturer = \App\Models\Lecturer::where('user_id', $user->user_id ?? $user->id)->first();
+
 
         // Fetch classes using lecturer_id to match database constraints
         $assignedClasses = Classes::where('lecturer_id', $lecturer->lecturer_id)
