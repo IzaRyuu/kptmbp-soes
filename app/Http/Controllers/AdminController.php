@@ -122,29 +122,52 @@ class AdminController extends Controller
             'role'  => 'nullable|string|in:admin,lecturer,student',
         ]);
 
-        $changes = [];
+        $auditEntries = [];
 
+        // Check Name
         if ($user->name !== $request->name) {
-            $changes[] = "Name changed from '{$user->name}' to '{$request->name}'";
-        }
-        if ($user->email !== $request->email) {
-            $changes[] = "Email changed from '{$user->email}' to '{$request->email}'";
+            $auditEntries[] = [
+                'changed_field' => 'name',
+                'old_value'     => $user->name,
+                'new_value'     => $request->name,
+            ];
+            $user->name = $request->name;
         }
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        if ($request->filled('role')) {
+        // Check Email
+        if ($user->email !== $request->email) {
+            $auditEntries[] = [
+                'changed_field' => 'email',
+                'old_value'     => $user->email,
+                'new_value'     => $request->email,
+            ];
+            $user->email = $request->email;
+        }
+
+        // Check Role
+        if ($request->filled('role') && $user->role !== $request->role) {
+            $auditEntries[] = [
+                'changed_field' => 'role',
+                'old_value'     => $user->role,
+                'new_value'     => $request->role,
+            ];
             $user->role = $request->role;
         }
+
         $user->save();
 
-        // Student update
+        // Student Specific Field Check
         if ($user->role === 'student' && $user->student) {
             $student = $user->student;
             $oldMatric = $student->matric_number ?? $student->matrix_number ?? '';
-            
+
             if ($request->has('matric_number') && $oldMatric !== $request->matric_number) {
-                $changes[] = "Matric Number changed from '{$oldMatric}' to '{$request->matric_number}'";
+                $auditEntries[] = [
+                    'changed_field' => 'matric_number',
+                    'old_value'     => $oldMatric,
+                    'new_value'     => $request->matric_number,
+                ];
+
                 if (isset($student->matric_number) || array_key_exists('matric_number', $student->getAttributes())) {
                     $student->matric_number = $request->matric_number;
                 } else {
@@ -152,42 +175,44 @@ class AdminController extends Controller
                 }
                 $student->save();
             }
-        } 
-        // Lecturer update
+        }
+        // Lecturer Specific Field Check
         elseif ($user->role === 'lecturer' && $user->lecturer) {
             $lecturer = $user->lecturer;
             $oldStaff = $lecturer->staff_number ?? '';
-            
+
             if ($request->has('staff_number') && $oldStaff !== $request->staff_number) {
-                $changes[] = "Staff Number changed from '{$oldStaff}' to '{$request->staff_number}'";
+                $auditEntries[] = [
+                    'changed_field' => 'staff_number',
+                    'old_value'     => $oldStaff,
+                    'new_value'     => $request->staff_number,
+                ];
                 $lecturer->staff_number = $request->staff_number;
                 $lecturer->save();
             }
         }
 
-        // SAFE DYNAMIC LOGGING: Filters out non-existent table columns automatically
-        if (!empty($changes)) {
-            $changeString = implode(', ', $changes);
-            
-            // Fetch all actual columns present in your Supabase profile_audit_logs table
+        // Save individual audit records for each changed field
+        if (!empty($auditEntries)) {
             $existingColumns = Schema::getColumnListing('profile_audit_logs');
 
-            // Map candidate data
-            $candidateData = [
-                'user_id'    => $user->user_id,
-                'user_name'  => $user->name,
-                'user_role'  => $user->role,
-                'role'       => $user->role,
-                'action'     => 'Profile updated by Admin (' . Auth::user()->name . ')',
-                'changes'    => $changeString,
-                'details'    => $changeString,
-                'updated_by' => Auth::user()->name ?? 'System Administrator',
-            ];
+            foreach ($auditEntries as $entry) {
+                $candidateData = [
+                    'user_id'       => $user->user_id,
+                    'user_name'     => $user->name,
+                    'user_role'     => $user->role,
+                    'changed_field' => $entry['changed_field'],
+                    'old_value'     => (string) $entry['old_value'],
+                    'new_value'     => (string) $entry['new_value'],
+                    'updated_by'    => Auth::user()->name ?? 'System Administrator',
+                    'action'        => 'Updated ' . $entry['changed_field'],
+                ];
 
-            // Keep ONLY columns that actually exist in your database table
-            $logData = array_intersect_key($candidateData, array_flip($existingColumns));
+                // Safely filter against existing database columns
+                $logData = array_intersect_key($candidateData, array_flip($existingColumns));
 
-            ProfileAuditLog::create($logData);
+                ProfileAuditLog::create($logData);
+            }
         }
 
         return redirect()->back()->with('success', 'User details updated successfully for ' . $user->name);
