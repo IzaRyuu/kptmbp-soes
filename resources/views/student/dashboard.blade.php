@@ -12,6 +12,10 @@
         .navbar-custom { background-color: #0f172a; }
         .card-exam { border: none; border-radius: 12px; transition: transform 0.2s; }
         .card-exam:hover { transform: translateY(-3px); }
+        .class-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .class-card:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important; }
+        .assessment-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .assessment-card:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important; }
     </style>
 </head>
 <body>
@@ -45,8 +49,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark shadow border-0" aria-labelledby="studentMenuDropdown">
                         <li>
-                            <a class="dropdown-item py-2 {{ request()->routeIs('student.dashboard') ? 'active bg-primary' : '' }}" 
-                            href="{{ route('student.dashboard') }}">
+                            <a class="dropdown-item py-2 active" id="tab-dashboard-link" data-bs-toggle="tab" href="#tab-dashboard">
                                 <i class="bi bi-speedometer2 me-2"></i> Student Dashboard
                             </a>
                         </li>
@@ -58,9 +61,7 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item py-2 {{ request()->routeIs('student.profile*') ? 'active bg-primary' : '' }}" 
-                            href="#tab-profile" 
-                            data-bs-toggle="tab">
+                            <a class="dropdown-item py-2" id="tab-profile-link" data-bs-toggle="tab" href="#tab-profile">
                                 <i class="bi bi-person-gear me-2"></i> My Profile
                             </a>
                         </li>
@@ -83,62 +84,363 @@
                 </form>
             </div>
         </div>
+    </div>
+</nav>
 
-        <!-- PROFILE TAB -->
+<div class="container py-5">
+    
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold">Welcome, {{ $user->name ?? auth()->user()->name }}</h2>
+            <p class="text-muted">You are using KPTMBP SOES. Have a great exam!</p>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <!-- TAB CONTAINER FOR DASHBOARD VS PROFILE -->
+    <div class="tab-content">
+
+        <!-- TAB 1: STUDENT DASHBOARD CONTENT -->
+        <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel">
+
+            <!-- Join Class (Search & Select) -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h4 class="fw-bold mb-3">
+                        <i class="bi bi-door-open me-2 text-primary"></i>
+                        Join a Class
+                    </h4>
+
+                    <p class="text-muted">
+                        Enter the class code provided by your lecturer to search for your class section.
+                    </p>
+
+                    <!-- Step 1: Search Form -->
+                    <form action="{{ route('student.classes.search') }}" method="POST" class="mb-3">
+                        @csrf
+                        <div class="row g-2">
+                            <div class="col-md-9">
+                                <input
+                                    type="text"
+                                    name="class_code"
+                                    class="form-control"
+                                    placeholder="Example: CS101-SEC1"
+                                    value="{{ old('class_code') }}"
+                                    required
+                                >
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-search me-1"></i>
+                                    Search Class
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Step 2: Search Results List -->
+                    @if(session('searchResults'))
+                        <hr class="my-3">
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-list-check me-1 text-primary"></i> Search Results:
+                        </h6>
+
+                        <div class="list-group">
+                            @forelse(session('searchResults') as $class)
+                                @php
+                                    $lecturerName = $class->lecturer->user->name 
+                                        ?? $class->lecturer->name 
+                                        ?? $class->lecturer->lecturer_name 
+                                        ?? 'Lecturer';
+                                @endphp
+                                <div class="list-group-item d-flex justify-content-between align-items-center p-3 border rounded mb-2">
+                                    <div>
+                                        <h6 class="fw-bold text-primary mb-1">
+                                            {{ $class->class_name ?? $class->name }}
+                                        </h6>
+                                        <p class="mb-0 small text-muted">
+                                            <i class="bi bi-person me-1"></i> Lecturer: <strong>{{ $lecturerName }}</strong> | 
+                                            <i class="bi bi-tag me-1"></i> Code: <span class="badge bg-secondary">{{ $class->class_code ?? $class->code }}</span>
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Enroll into specific selected class -->
+                                    <form action="{{ route('student.classes.confirm-enroll') }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="class_id" value="{{ $class->class_id ?? $class->id }}">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-plus-circle me-1"></i> Enroll in this Class
+                                        </button>
+                                    </form>
+                                </div>
+                            @empty
+                                <div class="alert alert-warning mb-0 small" role="alert">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> No classes found with this code. Please check with your lecturer.
+                                </div>
+                            @endforelse
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- My Classes -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="card-title fw-bold text-primary mb-0">
+                        <i class="bi bi-people me-2"></i>My Classes
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row g-3">
+                        @forelse($studentClasses ?? $classes ?? [] as $classItem)
+                            @php
+                                $cls = $classItem->class ?? $classItem;
+                                $cName = $cls->class_name ?? $cls->name ?? $cls->subject_name ?? null;
+                                $cCode = $cls->class_code ?? $cls->code ?? $cls->subject_code ?? $classItem->class_code ?? null;
+                            @endphp
+
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card class-card h-100 border border-light-subtle rounded-3 shadow-sm transition-all">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                <i class="bi bi-door-open fs-4"></i>
+                                            </div>
+                                            <div class="overflow-hidden">
+                                                <h6 class="fw-bold mb-1 text-truncate text-dark">
+                                                    {{ $cName ?? 'Class (' . ($cCode ?? 'N/A') . ')' }}
+                                                </h6>
+                                                @if($cCode)
+                                                    <span class="badge bg-secondary font-monospace px-2 py-1">
+                                                        {{ $cCode }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="pt-2 border-top mt-2">
+                                            <span class="text-muted small">
+                                                <i class="bi bi-person-badge me-1"></i>Lecturer: 
+                                                <strong>
+                                                    {{ $cls->lecturer->user->name ?? $cls->lecturer->name ?? $cls->lecturer_name ?? 'Lecturer' }}
+                                                </strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-12">
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-journal-x fs-2 mb-2 d-block"></i>
+                                    You are not enrolled in any classes yet.
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available & Upcoming Assessments -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="card-title fw-bold text-primary mb-0">
+                        <i class="bi bi-journal-text me-2"></i>Available & Upcoming Assessments
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row g-3">
+                        @forelse($exams ?? [] as $exam)
+                            @php
+                                $isUpcoming = \Carbon\Carbon::parse($exam->start_time)->isFuture();
+                                $isAvailable = \Carbon\Carbon::parse($exam->start_time)->isPast() && \Carbon\Carbon::parse($exam->end_time)->isFuture();
+                                $examId = $exam->id ?? $exam->exam_id;
+                            @endphp
+
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card assessment-card h-100 border border-light-subtle rounded-3 shadow-sm transition-all position-relative" 
+                                    style="cursor: pointer;" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#examModal{{ $examId }}">
+                                    
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                <i class="bi bi-file-earmark-text fs-4"></i>
+                                            </div>
+                                            <div class="overflow-hidden flex-grow-1">
+                                                <h6 class="fw-bold mb-1 text-truncate text-dark">
+                                                    {{ $exam->title }}
+                                                </h6>
+                                                @if($isUpcoming)
+                                                    <span class="badge bg-warning text-dark px-2 py-1">Upcoming</span>
+                                                @elseif($isAvailable)
+                                                    <span class="badge bg-success px-2 py-1">Available</span>
+                                                @else
+                                                    <span class="badge bg-secondary px-2 py-1">Ended</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="pt-2 border-top mt-2">
+                                            @php
+                                                $examClassCode = $exam->class_code ?? $exam->class->class_code ?? null;
+                                                $matchedClass = isset($studentClasses) ? $studentClasses->firstWhere('class_code', $examClassCode) : null;
+                                                $className = $exam->class->class_name ?? $exam->class->name ?? $matchedClass->class_name ?? $matchedClass->name ?? $exam->class_name ?? 'N/A';
+                                            @endphp
+                                            <span class="text-muted small">
+                                                <i class="bi bi-door-open me-1"></i>Class: 
+                                                <strong>{{ $className }}</strong> 
+                                                ({{ $examClassCode ?? 'N/A' }})
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Exam Details Modal -->
+                            <div class="modal fade" id="examModal{{ $examId }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow">
+                                        <form action="{{ route('student.exams.take', $examId) }}" method="GET" id="examForm{{ $examId }}">
+                                            <div class="modal-header border-bottom-0 pb-0">
+                                                <h5 class="modal-title fw-bold text-dark">
+                                                    {{ $exam->title }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body py-3">
+                                                <p class="text-muted mb-2">
+                                                    <i class="bi bi-door-open me-2 text-primary"></i>Class: 
+                                                    <strong>{{ $className }}</strong> 
+                                                    ({{ $examClassCode ?? 'N/A' }})
+                                                </p>
+                                                <p class="text-muted mb-2">
+                                                    <i class="bi bi-clock me-2 text-primary"></i>Duration: 
+                                                    <strong>{{ $exam->duration_minutes ?? $exam->duration ?? $exam->time_limit ?? 0 }} minutes</strong>
+                                                </p>
+                                                <p class="text-muted mb-2">
+                                                    <i class="bi bi-calendar-event me-2 text-primary"></i>Start: 
+                                                    <strong>{{ \Carbon\Carbon::parse($exam->start_time)->format('d M Y, h:i A') }}</strong>
+                                                </p>
+                                                <p class="text-muted mb-3">
+                                                    <i class="bi bi-calendar-x me-2 text-primary"></i>End: 
+                                                    <strong>{{ \Carbon\Carbon::parse($exam->end_time)->format('d M Y, h:i A') }}</strong>
+                                                </p>
+
+                                                <div class="p-2 bg-light rounded text-muted small mb-3">
+                                                    <i class="bi bi-question-circle me-1"></i>
+                                                    Total Questions: <strong>{{ $exam->questions_count ?? optional($exam->questions)->count() ?? 0 }}</strong>
+                                                </div>
+
+                                                @if($isAvailable)
+                                                    <hr class="my-3">
+                                                    <div class="text-center">
+                                                        <label class="form-label text-muted small mb-2 d-block">
+                                                            Complete verification to start examination:
+                                                        </label>
+                                                        <div class="d-flex justify-content-center">
+                                                            {!! NoCaptcha::display([
+                                                                'data-callback' => 'onCaptchaSuccess' . $examId,
+                                                                'data-expired-callback' => 'onCaptchaExpired' . $examId
+                                                            ]) !!}
+                                                        </div>
+                                                    </div>
+
+                                                    <script>
+                                                        function onCaptchaSuccess{{ $examId }}(token) {
+                                                            document.getElementById('btnStartExam{{ $examId }}').disabled = false;
+                                                        }
+                                                        function onCaptchaExpired{{ $examId }}() {
+                                                            document.getElementById('btnStartExam{{ $examId }}').disabled = true;
+                                                        }
+                                                    </script>
+                                                @endif
+                                            </div>
+                                            <div class="modal-footer border-top-0 pt-0">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                @if($isUpcoming)
+                                                    <button class="btn btn-secondary" disabled>
+                                                        <i class="bi bi-lock me-1"></i> Not Started Yet
+                                                    </button>
+                                                @elseif($isAvailable)
+                                                    <button type="submit" id="btnStartExam{{ $examId }}" class="btn btn-primary" disabled>
+                                                        <i class="bi bi-pencil-square me-1"></i> Start Examination
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-12">
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-journal-x fs-2 mb-2 d-block"></i>
+                                    No assessment available or scheduled.
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- END TAB 1 -->
+
+
+        <!-- TAB 2: MY PROFILE TAB CONTENT -->
         <div class="tab-pane fade" id="tab-profile" role="tabpanel">
-            <div class="card border-0 shadow-sm rounded-4 mt-3">
+            <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h5>
-                    <p class="text-muted small">Update your name, matric number, and security credentials.</p>
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-person-circle me-2"></i>My Profile Settings
+                    </h5>
+                    <p class="text-muted small mb-0">Update your account name, matric number, and security password.</p>
                 </div>
                 <div class="card-body p-4">
-
-                    {{-- Alerts --}}
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <ul class="mb-0">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
 
                     <form action="{{ route('student.profile.update') }}" method="POST">
                         @csrf
 
-                        <!-- Personal Information -->
+                        <!-- Personal Details -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label for="name" class="form-label fw-semibold">Full Name</label>
-                                <input type="text" class="form-control" id="name" name="name" value="{{ Auth::user()->name }}" required>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ auth()->user()->name }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label for="matric_number" class="form-label fw-semibold">Matric Number</label>
-                                <input type="text" class="form-control" id="matric_number" name="matric_number" value="{{ $student->matric_number ?? 'N/A' }}" required>
+                                <input type="text" class="form-control" id="matric_number" name="matric_number" value="{{ $student->matric_number ?? auth()->user()->student->matric_number ?? '' }}" required>
                             </div>
 
                             <div class="col-md-12">
                                 <label class="form-label fw-semibold">Email Address</label>
-                                <input type="email" class="form-control bg-light" value="{{ Auth::user()->email }}" readonly>
-                                <div class="form-text">Domain Verified: @student.kptm.edu.my</div>
+                                <input type="email" class="form-control bg-light text-muted" value="{{ auth()->user()->email }}" readonly>
+                                <div class="form-text">Domain Verified Student Account</div>
                             </div>
                         </div>
 
                         <hr class="my-4 text-muted">
 
-                        <!-- Password Change Section -->
-                        <h6 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2 text-warning"></i>Change Password</h6>
-                        <p class="text-muted small mb-3">Leave blank if you do not wish to change your password.</p>
+                        <!-- Security & Password -->
+                        <h6 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2 text-warning"></i>Change Security Password</h6>
+                        <p class="text-muted small mb-3">Leave these fields blank if you do not wish to change your password.</p>
 
                         <div class="row g-3">
                             <div class="col-md-4">
@@ -157,382 +459,18 @@
 
                         <div class="mt-4 text-end">
                             <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                                <i class="bi bi-check-lg me-1"></i> Save Changes
+                                <i class="bi bi-check-lg me-1"></i> Save Profile Changes
                             </button>
                         </div>
                     </form>
 
                 </div>
             </div>
-        </div>
-    </div>
-</nav>
+        </div> <!-- END TAB 2 -->
 
-<div class="container py-5">
-    
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="fw-bold">Welcome, {{ $user->name }}</h2>
-            <p class="text-muted">You are using KPTMBP SOES<strong>have a great exam!</strong></p>
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            {{ session('success') }}
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert">
-            </button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            {{ session('error') }}
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert">
-            </button>
-        </div>
-    @endif
-
-
-    <!-- Join Class (Search & Select) -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            <h4 class="fw-bold mb-3">
-                <i class="bi bi-door-open me-2 text-primary"></i>
-                Join a Class
-            </h4>
-
-            <p class="text-muted">
-                Enter the class code provided by your lecturer to search for your class section.
-            </p>
-
-            <!-- Step 1: Search Form -->
-            <form action="{{ route('student.classes.search') }}" method="POST" class="mb-3">
-                @csrf
-                <div class="row g-2">
-                    <div class="col-md-9">
-                        <input
-                            type="text"
-                            name="class_code"
-                            class="form-control"
-                            placeholder="Example: CS101-SEC1"
-                            value="{{ old('class_code') }}"
-                            required
-                        >
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-search me-1"></i>
-                            Search Class
-                        </button>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Step 2: Search Results List -->
-            @if(session('searchResults'))
-                <hr class="my-3">
-                <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-list-check me-1 text-primary"></i> Search Results:
-                </h6>
-
-                <div class="list-group">
-                    @forelse(session('searchResults') as $class)
-                        @php
-                            $lecturerName = $class->lecturer->user->name 
-                                ?? $class->lecturer->name 
-                                ?? $class->lecturer->lecturer_name 
-                                ?? 'Lecturer';
-                        @endphp
-                        <div class="list-group-item d-flex justify-content-between align-items-center p-3 border rounded mb-2">
-                            <div>
-                                <h6 class="fw-bold text-primary mb-1">
-                                    {{ $class->class_name ?? $class->name }}
-                                </h6>
-                                <p class="mb-0 small text-muted">
-                                    <i class="bi bi-person me-1"></i> Lecturer: <strong>{{ $lecturerName }}</strong> | 
-                                    <i class="bi bi-tag me-1"></i> Code: <span class="badge bg-secondary">{{ $class->class_code ?? $class->code }}</span>
-                                </p>
-                            </div>
-                            
-                            <!-- Enroll into specific selected class -->
-                            <form action="{{ route('student.classes.confirm-enroll') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="class_id" value="{{ $class->class_id ?? $class->id }}">
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="bi bi-plus-circle me-1"></i> Enroll in this Class
-                                </button>
-                            </form>
-                        </div>
-                    @empty
-                        <div class="alert alert-warning mb-0 small" role="alert">
-                            <i class="bi bi-exclamation-triangle me-1"></i> No classes found with this code. Please check with your lecturer.
-                        </div>
-                    @endforelse
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3 border-0">
-            <h5 class="card-title fw-bold text-primary mb-0">
-                <i class="bi bi-people me-2"></i>My Classes
-            </h5>
-        </div>
-        <div class="card-body pt-0">
-            <div class="row g-3">
-                @forelse($studentClasses ?? $classes ?? [] as $classItem)
-                    @php
-                        // Resolve class object whether $classItem is a Pivot, Model, or Joined array
-                        $cls = $classItem->class ?? $classItem;
-                        
-                        // Dynamic field resolution for class name and code
-                        $cName = $cls->class_name ?? $cls->name ?? $cls->subject_name ?? null;
-                        $cCode = $cls->class_code ?? $cls->code ?? $cls->subject_code ?? $classItem->class_code ?? null;
-                    @endphp
-
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card class-card h-100 border border-light-subtle rounded-3 shadow-sm transition-all">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <!-- Door Icon Box -->
-                                    <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                        <i class="bi bi-door-open fs-4"></i>
-                                    </div>
-                                    
-                                    <!-- Class Title & Code Badge -->
-                                    <div class="overflow-hidden">
-                                        <h6 class="fw-bold mb-1 text-truncate text-dark">
-                                            {{ $cName ?? 'Class (' . ($cCode ?? 'N/A') . ')' }}
-                                        </h6>
-                                        @if($cCode)
-                                            <span class="badge bg-secondary font-monospace px-2 py-1">
-                                                {{ $cCode }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <!-- Lecturer Information -->
-                                <div class="pt-2 border-top mt-2">
-                                    <span class="text-muted small">
-                                        <i class="bi bi-person-badge me-1"></i>Lecturer: 
-                                        <strong>
-                                            {{ $cls->lecturer->user->name ?? $cls->lecturer->name ?? $cls->lecturer_name ?? 'MUHAMMAD SHAFIQ BIN MOHD RAFI (KL)' }}
-                                        </strong>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="col-12">
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-journal-x fs-2 mb-2 d-block"></i>
-                            You are not enrolled in any classes yet.
-                        </div>
-                    </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    <!-- Available & Upcoming Assessments -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3 border-0">
-            <h5 class="card-title fw-bold text-primary mb-0">
-                <i class="bi bi-journal-text me-2"></i>Available & Upcoming Assessments
-            </h5>
-        </div>
-        <div class="card-body pt-0">
-            <div class="row g-3">
-                @forelse($exams as $exam)
-                    @php
-                        $isUpcoming = \Carbon\Carbon::parse($exam->start_time)->isFuture();
-                        $isAvailable = \Carbon\Carbon::parse($exam->start_time)->isPast() && \Carbon\Carbon::parse($exam->end_time)->isFuture();
-                    @endphp
-
-                    <!-- Grid Item -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card assessment-card h-100 border border-light-subtle rounded-3 shadow-sm transition-all position-relative" 
-                            style="cursor: pointer;" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#examModal{{ $exam->id ?? $exam->exam_id }}">
-                            
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <!-- File Text Icon Box -->
-                                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                        <i class="bi bi-file-earmark-text fs-4"></i>
-                                    </div>
-                                    
-                                    <!-- Exam Title & Status Badge -->
-                                    <div class="overflow-hidden flex-grow-1">
-                                        <h6 class="fw-bold mb-1 text-truncate text-dark">
-                                            {{ $exam->title }}
-                                        </h6>
-                                        @if($isUpcoming)
-                                            <span class="badge bg-warning text-dark px-2 py-1">Upcoming</span>
-                                        @elseif($isAvailable)
-                                            <span class="badge bg-success px-2 py-1">Available</span>
-                                        @else
-                                            <span class="badge bg-secondary px-2 py-1">Ended</span>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <!-- Class Name & Code -->
-                                <div class="pt-2 border-top mt-2">
-                                    @php
-                                        $examClassCode = $exam->class_code ?? $exam->class->class_code ?? null;
-                                        $matchedClass = isset($studentClasses) ? $studentClasses->firstWhere('class_code', $examClassCode) : null;
-                                        $className = $exam->class->class_name ?? $exam->class->name ?? $matchedClass->class_name ?? $matchedClass->name ?? $exam->class_name ?? 'N/A';
-                                    @endphp
-                                    <span class="text-muted small">
-                                        <i class="bi bi-door-open me-1"></i>Class: 
-                                        <strong>{{ $className }}</strong> 
-                                        ({{ $examClassCode ?? 'N/A' }})
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Exam Details Modal -->
-                    <div class="modal fade" id="examModal{{ $exam->id ?? $exam->exam_id }}" tabindex="-1" aria-labelledby="examModalLabel{{ $exam->id ?? $exam->exam_id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content border-0 shadow">
-                                <form action="{{ route('student.exams.take', $exam->id ?? $exam->exam_id) }}" method="GET" id="examForm{{ $exam->id ?? $exam->exam_id }}">
-                                    <div class="modal-header border-bottom-0 pb-0">
-                                        <h5 class="modal-title fw-bold text-dark" id="examModalLabel{{ $exam->id ?? $exam->exam_id }}">
-                                            {{ $exam->title }}
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body py-3">
-
-                                        @php
-                                            $examClassCode = $exam->class_code ?? $exam->class->class_code ?? null;
-                                            $matchedClass = isset($studentClasses) ? $studentClasses->firstWhere('class_code', $examClassCode) : null;
-                                            $className = $exam->class->class_name ?? $exam->class->name ?? $matchedClass->class_name ?? $matchedClass->name ?? $exam->class_name ?? 'N/A';
-                                            $examId = $exam->id ?? $exam->exam_id;
-                                        @endphp
-
-                                        <!-- Class Name & Code -->
-                                        <p class="text-muted mb-2">
-                                            <i class="bi bi-door-open me-2 text-primary"></i>Class: 
-                                            <strong>{{ $exam->class->class_name ?? $exam->class->name ?? 'N/A' }}</strong> 
-                                            ({{ $exam->class->class_code ?? $exam->class->code ?? $exam->class_code ?? 'N/A' }})
-                                        </p>
-
-                                        <!-- Duration -->
-                                        <p class="text-muted mb-2">
-                                            <i class="bi bi-clock me-2 text-primary"></i>Duration: 
-                                            <strong>{{ $exam->duration_minutes ?? $exam->duration ?? $exam->time_limit ?? 0 }} minutes</strong>
-                                        </p>
-
-                                        <!-- Start & End Time -->
-                                        <p class="text-muted mb-2">
-                                            <i class="bi bi-calendar-event me-2 text-primary"></i>Start: 
-                                            <strong>{{ \Carbon\Carbon::parse($exam->start_time)->format('d M Y, h:i A') }}</strong>
-                                        </p>
-                                        <p class="text-muted mb-3">
-                                            <i class="bi bi-calendar-x me-2 text-primary"></i>End: 
-                                            <strong>{{ \Carbon\Carbon::parse($exam->end_time)->format('d M Y, h:i A') }}</strong>
-                                        </p>
-
-                                        <!-- Question Count -->
-                                        <div class="p-2 bg-light rounded text-muted small mb-3">
-                                            <i class="bi bi-question-circle me-1"></i>
-                                            Total Questions: <strong>{{ $exam->questions_count ?? optional($exam->questions)->count() ?? 0 }}</strong>
-                                        </div>
-
-                                        <!-- reCAPTCHA Widget -->
-                                        @if($isAvailable)
-                                            <hr class="my-3">
-                                            <div class="text-center">
-                                                <label class="form-label text-muted small mb-2 d-block">
-                                                    Complete verification to start examination:
-                                                </label>
-                                                <div class="d-flex justify-content-center">
-                                                    {!! NoCaptcha::display([
-                                                        'data-callback' => 'onCaptchaSuccess' . $examId,
-                                                        'data-expired-callback' => 'onCaptchaExpired' . $examId
-                                                    ]) !!}
-                                                </div>
-                                                @error('g-recaptcha-response')
-                                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- JavaScript Callbacks for this specific exam modal -->
-                                            <script>
-                                                function onCaptchaSuccess{{ $examId }}(token) {
-                                                    document.getElementById('btnStartExam{{ $examId }}').disabled = false;
-                                                }
-                                                function onCaptchaExpired{{ $examId }}() {
-                                                    document.getElementById('btnStartExam{{ $examId }}').disabled = true;
-                                                }
-                                            </script>
-                                        @endif
-                                    </div>
-                                    <div class="modal-footer border-top-0 pt-0">
-                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                                        
-                                        @if($isUpcoming)
-                                            <button class="btn btn-secondary" disabled>
-                                                <i class="bi bi-lock me-1"></i> Not Started Yet
-                                            </button>
-                                        @elseif($isAvailable)
-                                            <!-- Button starts disabled until captcha is solved -->
-                                            <button type="submit" id="btnStartExam{{ $examId }}" class="btn btn-primary" disabled>
-                                                <i class="bi bi-pencil-square me-1"></i> Start Examination
-                                            </button>
-                                        @endif
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="col-12">
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-journal-x fs-2 mb-2 d-block"></i>
-                            No assessment available or scheduled.
-                        </div>
-                    </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
+    </div> <!-- END TAB-CONTENT CONTAINER -->
 
 </div>
-
-<style>
-.class-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-.class-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
-}
-.assessment-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-.assessment-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
-}
-</style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
