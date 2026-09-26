@@ -108,21 +108,56 @@
         </div>
 
         <div class="card-body p-3">
-            <div class="row g-3">
+            <!-- LOG FILTER TABS -->
+            <ul class="nav nav-pills mb-3 gap-2" id="logTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active btn-sm fw-semibold" onclick="filterLogs('all', this)">
+                        <i class="bi bi-list-stars me-1"></i> All Logs
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link btn-sm fw-semibold text-info" onclick="filterLogs('lecturer', this)">
+                        <i class="bi bi-person-badge me-1"></i> Lecturers
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link btn-sm fw-semibold text-success" onclick="filterLogs('student', this)">
+                        <i class="bi bi-mortarboard me-1"></i> Students
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link btn-sm fw-semibold text-danger" onclick="filterLogs('admin', this)">
+                        <i class="bi bi-shield-lock me-1"></i> Admins
+                    </button>
+                </li>
+            </ul>
+
+            <div class="row g-3" id="auditLogsContainer">
                 @isset($auditLogs)
                     @forelse($auditLogs as $log)
-                        <div class="col-12">
+                        <!-- Log Item Card with dynamic data-role attribute -->
+                        <div class="col-12 log-item" data-role="{{ strtolower($log->user_role) }}">
                             <div class="card border border-light-subtle shadow-sm rounded-3">
                                 <div class="card-body p-3">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="d-flex align-items-center gap-2">
                                             <!-- Role Badge -->
-                                            @if(strtolower($log->user_role) == 'lecturer')
-                                                <span class="badge bg-info text-dark px-2 py-1"><i class="bi bi-person-badge me-1"></i>Lecturer</span>
-                                            @elseif(strtolower($log->user_role) == 'student')
-                                                <span class="badge bg-success px-2 py-1"><i class="bi bi-mortarboard me-1"></i>Student</span>
+                                            @if(strtolower($log->user_role) === 'admin')
+                                                <span class="badge bg-danger text-white px-2 py-1 me-1">
+                                                    <i class="bi bi-shield-lock-fill me-1"></i>Admin
+                                                </span>
+                                            @elseif(strtolower($log->user_role) === 'lecturer')
+                                                <span class="badge bg-info text-dark px-2 py-1 me-1">
+                                                    <i class="bi bi-person-badge-fill me-1"></i>Lecturer
+                                                </span>
+                                            @elseif(strtolower($log->user_role) === 'student')
+                                                <span class="badge bg-success text-white px-2 py-1 me-1">
+                                                    <i class="bi bi-mortarboard-fill me-1"></i>Student
+                                                </span>
                                             @else
-                                                <span class="badge bg-danger px-2 py-1"><i class="bi bi-shield-lock me-1"></i>Admin</span>
+                                                <span class="badge bg-secondary text-white px-2 py-1 me-1">
+                                                    <i class="bi bi-person-fill me-1"></i>{{ ucfirst($log->user_role) }}
+                                                </span>
                                             @endif
 
                                             <h6 class="fw-bold mb-0 text-dark">{{ $log->user_name }}</h6>
@@ -318,5 +353,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const roleSelect = document.getElementById('roleSelect');
     if (roleSelect) toggleFormFields(roleSelect.value);
 });
+function filterLogs(role, btnElement) {
+    // 1. Update Active Class on Filter Tab Buttons
+    const buttons = document.querySelectorAll('#logTabs .nav-link');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    // 2. Filter Log Item Cards based on data-role
+    const logItems = document.querySelectorAll('.log-item');
+    logItems.forEach(item => {
+        const itemRole = item.getAttribute('data-role');
+        if (role === 'all' || itemRole === role) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
 </script>
 @endsection
