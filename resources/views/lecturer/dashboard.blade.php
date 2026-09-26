@@ -493,9 +493,17 @@
                                         <label for="email" class="form-label fw-semibold">Email Address</label>
                                         <input type="email" class="form-control" id="email" name="email" value="{{ Auth::user()->email }}" required>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Staff ID</label>
-                                        <input type="text" class="form-control bg-light" value="{{ $lecturer->staff_id ?? 'N/A' }}" readonly>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="staff_id" class="form-label font-weight-bold">Staff ID</label>
+                                        <input 
+                                            type="text" 
+                                            id="staff_id" 
+                                            name="staff_id" 
+                                            class="form-control" 
+                                            placeholder="Enter Staff ID"
+                                            value="{{ old('staff_id', $lecturer->staff_id ?? $lecturer->staff_number ?? $lecturer->staff_no ?? '') }}" 
+                                            required
+                                        >
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Role</label>

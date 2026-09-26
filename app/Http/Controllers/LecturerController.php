@@ -93,6 +93,7 @@ class LecturerController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . ($user->user_id ?? $user->id) . ',user_id',
+            'staff_id' => 'required|string|max:50',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
 
@@ -104,7 +105,7 @@ class LecturerController extends Controller
 
         $request->validate($rules);
 
-        // Prepare update data
+        // Prepare update data for User
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
@@ -125,10 +126,22 @@ class LecturerController extends Controller
             $updateData['profile_image'] = $path;
         }
 
-        // Direct database update
+        // Direct database update for User model
         User::where('user_id', $user->user_id ?? $user->id)->update($updateData);
 
-        return redirect()->back()->with('success', 'Profile and password updated successfully.');
+        // Update Staff ID in Lecturers table
+        $staffValue = $request->input('staff_id');
+
+        \App\Models\Lecturer::updateOrCreate(
+            ['user_id' => $user->user_id ?? $user->id],
+            [
+                'staff_id'     => $staffValue,
+                'staff_number' => $staffValue,
+                'staff_no'     => $staffValue,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Profile and Staff ID updated successfully.');
     }
 
     public function manageStudents()
