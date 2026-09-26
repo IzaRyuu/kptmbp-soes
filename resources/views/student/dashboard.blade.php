@@ -65,11 +65,8 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item py-2" 
-                            id="tab-profile-link" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#tab-profile" 
-                            href="#tab-profile">
+                            <a class="dropdown-item py-2 {{ request()->routeIs('student.profile*') ? 'active bg-primary' : '' }}" 
+                                href="{{ route('student.profile.edit') }}">
                                 <i class="bi bi-person-gear me-2"></i> My Profile
                             </a>
                         </li>
