@@ -114,7 +114,6 @@ class AdminController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Find user using primary key user_id
         $user = User::where('user_id', $id)->firstOrFail();
 
         $request->validate([
@@ -123,7 +122,17 @@ class AdminController extends Controller
             'role'  => 'nullable|string|in:admin,lecturer,student',
         ]);
 
-        // Preserve existing role unless a new valid role is provided
+        // Keep track of changes for logging
+        $changes = [];
+
+        if ($user->name !== $request->name) {
+            $changes[] = "Name changed from '{$user->name}' to '{$request->name}'";
+        }
+        if ($user->email !== $request->email) {
+            $changes[] = "Email changed from '{$user->email}' to '{$request->email}'";
+        }
+
+        // Update core fields
         $user->name = $request->name;
         $user->email = $request->email;
         if ($request->filled('role')) {
@@ -131,23 +140,47 @@ class AdminController extends Controller
         }
         $user->save();
 
-        // Update Student or Lecturer relationships based on preserved user role
+        // Update Student model & log matric changes
         if ($user->role === 'student' && $user->student) {
             $student = $user->student;
-            if ($request->has('matric_number')) {
+            $oldMatric = $student->matric_number ?? $student->matrix_number ?? '';
+            
+            if ($request->has('matric_number') && $oldMatric !== $request->matric_number) {
+                $changes[] = "Matric Number changed from '{$oldMatric}' to '{$request->matric_number}'";
                 if (isset($student->matric_number) || array_key_exists('matric_number', $student->getAttributes())) {
                     $student->matric_number = $request->matric_number;
                 } else {
                     $student->matrix_number = $request->matric_number;
                 }
+                $student->save();
             }
-            $student->save();
-        } elseif ($user->role === 'lecturer' && $user->lecturer) {
+        } 
+        // Update Lecturer model & log staff number changes
+        elseif ($user->role === 'lecturer' && $user->lecturer) {
             $lecturer = $user->lecturer;
-            if ($request->has('staff_number')) {
+            $oldStaff = $lecturer->staff_number ?? '';
+            
+            if ($request->has('staff_number') && $oldStaff !== $request->staff_number) {
+                $changes[] = "Staff Number changed from '{$oldStaff}' to '{$request->staff_number}'";
                 $lecturer->staff_number = $request->staff_number;
+                $lecturer->save();
             }
-            $lecturer->save();
+        }
+
+        // Save Activity / Profile Audit Log if any detail was updated
+        if (!empty($changes)) {
+            // Adjust model name & columns to match your database audit table schema
+            // Examples: AuditLog::create(...), ActivityLog::create(...), or ProfileAudit::create(...)
+            if (class_exists(\App\Models\ProfileAuditLog::class)) {
+                \App\Models\ProfileAuditLog::create([
+                    'user_id'     => Auth::user()->user_id ?? Auth::id(),
+                    'target_id'   => $user->user_id,
+                    'role'        => $user->role, // Stores 'student', 'lecturer', or 'admin' so the tab filter works
+                    'action'      => 'Updated details for user: ' . $user->name,
+                    'details'     => implode(', ', $changes),
+                    'created_at'  => now(),
+                ]);
+            }
         }
 
         return redirect()->back()->with('success', 'User details updated successfully for ' . $user->name);
