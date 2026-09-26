@@ -49,9 +49,6 @@
                 <button class="nav-link text-start mb-2" id="students-violation" data-bs-toggle="pill" data-bs-target="#tab-violation" type="button">
                     <i class="bi bi-exclamation-triangle me-2"></i> Violation
                 </button>
-                <button class="nav-link text-start mb-2" id="logs-tab" data-bs-toggle="pill" data-bs-target="#tab-logs" type="button">
-                    <i class="bi bi-activity me-2"></i> System Monitoring
-                </button>
             </div>
 
             <hr class="text-secondary">
