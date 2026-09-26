@@ -107,7 +107,6 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Password reset successfully for ' . $user->name);
     }
 
-    // Update User Details
     public function updateUser(Request $request, $id)
     {
         if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'lecturer') {
@@ -122,7 +121,6 @@ class AdminController extends Controller
             'role'  => 'nullable|string|in:admin,lecturer,student',
         ]);
 
-        // Keep track of changes for logging
         $changes = [];
 
         if ($user->name !== $request->name) {
@@ -132,7 +130,6 @@ class AdminController extends Controller
             $changes[] = "Email changed from '{$user->email}' to '{$request->email}'";
         }
 
-        // Update core fields
         $user->name = $request->name;
         $user->email = $request->email;
         if ($request->filled('role')) {
@@ -140,7 +137,7 @@ class AdminController extends Controller
         }
         $user->save();
 
-        // Update Student model & log matric changes
+        // Student update
         if ($user->role === 'student' && $user->student) {
             $student = $user->student;
             $oldMatric = $student->matric_number ?? $student->matrix_number ?? '';
@@ -155,7 +152,7 @@ class AdminController extends Controller
                 $student->save();
             }
         } 
-        // Update Lecturer model & log staff number changes
+        // Lecturer update
         elseif ($user->role === 'lecturer' && $user->lecturer) {
             $lecturer = $user->lecturer;
             $oldStaff = $lecturer->staff_number ?? '';
@@ -167,20 +164,17 @@ class AdminController extends Controller
             }
         }
 
-        // Save Activity / Profile Audit Log if any detail was updated
+        // Insert into profile_audit_logs with all non-null fields
         if (!empty($changes)) {
-            // Adjust model name & columns to match your database audit table schema
-            // Examples: AuditLog::create(...), ActivityLog::create(...), or ProfileAudit::create(...)
-            if (class_exists(\App\Models\ProfileAuditLog::class)) {
-                \App\Models\ProfileAuditLog::create([
-                    'user_id'     => Auth::user()->user_id ?? Auth::id(),
-                    'target_id'   => $user->user_id,
-                    'role'        => $user->role, // Stores 'student', 'lecturer', or 'admin' so the tab filter works
-                    'action'      => 'Updated details for user: ' . $user->name,
-                    'details'     => implode(', ', $changes),
-                    'created_at'  => now(),
-                ]);
-            }
+            ProfileAuditLog::create([
+                'user_id'       => $user->user_id,
+                'user_name'     => $user->name,
+                'user_email'    => $user->email,
+                'role'          => $user->role,
+                'action'        => 'Profile details updated by Admin (' . Auth::user()->name . ')',
+                'changes'       => implode(', ', $changes),
+                'updated_by'    => Auth::user()->name ?? 'System Administrator',
+            ]);
         }
 
         return redirect()->back()->with('success', 'User details updated successfully for ' . $user->name);
