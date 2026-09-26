@@ -49,6 +49,11 @@
                                     <i class="bi bi-clock-history me-2"></i> Assessment History
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{{ route('student.profile.edit') }}">
+                                    <i class="bi bi-person-gear me-2"></i> My Profile
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
