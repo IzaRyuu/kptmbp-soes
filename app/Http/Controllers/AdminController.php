@@ -117,7 +117,7 @@ class AdminController extends Controller
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id . ',user_id',
-            'role'  => 'required|in:student,lecturer,admin',
+            'role'  => 'nullable|in:student,lecturer,admin',
         ]);
 
         $user = User::findOrFail($id);
