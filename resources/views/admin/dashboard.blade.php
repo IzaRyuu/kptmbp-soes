@@ -340,32 +340,35 @@
                     @csrf
                     @method('PUT')
 
-                    <!-- Hidden input to preserve original user role -->
-                    <input type="hidden" name="role" value="{{ $user->role }}">
+                    <!-- Hidden field to preserve user role and prevent user from disappearing -->
+                    <input type="hidden" name="role" value="{{ $usr->role }}">
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Full Name</label>
-                        <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Edit {{ ucfirst($usr->role) }} Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ $usr->name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ $usr->email }}" required>
+                        </div>
+                        @if($usr->role === 'student')
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Matric Number</label>
+                                <input type="text" name="matric_number" class="form-control" value="{{ $usr->student->matric_number ?? $usr->student->matrix_number ?? '' }}">
+                            </div>
+                        @elseif($usr->role === 'lecturer')
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Staff Number</label>
+                                <input type="text" name="staff_number" class="form-control" value="{{ $usr->lecturer->staff_number ?? '' }}">
+                            </div>
+                        @endif
                     </div>
-
-                    @if($user->role === 'student')
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Matric Number</label>
-                            <input type="text" name="matric_number" class="form-control" value="{{ $user->student->matric_number ?? $user->student->matrix_number ?? '' }}">
-                        </div>
-                    @elseif($user->role === 'lecturer')
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Staff Number</label>
-                            <input type="text" name="staff_number" class="form-control" value="{{ $user->lecturer->staff_number ?? '' }}">
-                        </div>
-                    @endif
-
-                    <div class="modal-footer px-0 pb-0">
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
