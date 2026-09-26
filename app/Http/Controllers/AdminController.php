@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\ProfileAuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -164,19 +165,29 @@ class AdminController extends Controller
             }
         }
 
-        // Insert log record with all column variations provided
+        // SAFE DYNAMIC LOGGING: Filters out non-existent table columns automatically
         if (!empty($changes)) {
-            ProfileAuditLog::create([
+            $changeString = implode(', ', $changes);
+            
+            // Fetch all actual columns present in your Supabase profile_audit_logs table
+            $existingColumns = Schema::getColumnListing('profile_audit_logs');
+
+            // Map candidate data
+            $candidateData = [
                 'user_id'    => $user->user_id,
                 'user_name'  => $user->name,
-                'user_email' => $user->email,
                 'user_role'  => $user->role,
                 'role'       => $user->role,
-                'action'     => 'Profile details updated by Admin (' . Auth::user()->name . ')',
-                'changes'    => implode(', ', $changes),
-                'details'    => implode(', ', $changes),
+                'action'     => 'Profile updated by Admin (' . Auth::user()->name . ')',
+                'changes'    => $changeString,
+                'details'    => $changeString,
                 'updated_by' => Auth::user()->name ?? 'System Administrator',
-            ]);
+            ];
+
+            // Keep ONLY columns that actually exist in your database table
+            $logData = array_intersect_key($candidateData, array_flip($existingColumns));
+
+            ProfileAuditLog::create($logData);
         }
 
         return redirect()->back()->with('success', 'User details updated successfully for ' . $user->name);
