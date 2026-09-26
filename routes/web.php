@@ -201,6 +201,9 @@ Route::middleware(['auth'])->group(function () {
             
         Route::post('/classes/enroll', [StudentController::class, 'confirmEnrollment'])
             ->name('classes.confirm-enroll');
+    });
+
+    Route::middleware(['auth'])->prefix('student')->group(function () {
         Route::get('/dashboard', [StudentController::class, 'index'])
             ->name('student.dashboard');
         // Add Profile Update Route
