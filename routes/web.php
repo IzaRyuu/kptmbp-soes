@@ -201,4 +201,9 @@ Route::middleware(['auth'])->group(function () {
             
         Route::post('/classes/enroll', [StudentController::class, 'confirmEnrollment'])
             ->name('classes.confirm-enroll');
+        Route::get('/dashboard', [StudentController::class, 'index'])
+            ->name('student.dashboard');
+        // Add Profile Update Route
+        Route::post('/profile/update', [StudentController::class, 'updateProfile'])
+            ->name('student.profile.update');
     });

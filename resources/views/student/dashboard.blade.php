@@ -36,24 +36,32 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-white d-flex align-items-center gap-1" 
-                       href="#" 
-                       id="studentMenuDropdown" 
-                       role="button" 
-                       data-bs-toggle="dropdown" 
-                       aria-expanded="false">
+                    href="#" 
+                    id="studentMenuDropdown" 
+                    role="button" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false">
                         <i class="bi bi-person me-1"></i> Student
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark shadow border-0" aria-labelledby="studentMenuDropdown">
                         <li>
                             <a class="dropdown-item py-2 {{ request()->routeIs('student.dashboard') ? 'active bg-primary' : '' }}" 
-                               href="{{ route('student.dashboard') }}">
+                            href="{{ route('student.dashboard') }}">
                                 <i class="bi bi-speedometer2 me-2"></i> Student Dashboard
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item py-2 {{ request()->routeIs('student.assessment.history') ? 'active bg-primary' : '' }}" 
-                               href="{{ route('student.assessment.history') }}">
+                            href="{{ route('student.assessment.history') }}">
                                 <i class="bi bi-clock-history me-2"></i> Assessment History
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item py-2 {{ request()->routeIs('student.profile*') ? 'active bg-primary' : '' }}" 
+                            href="#tab-profile" 
+                            data-bs-toggle="tab">
+                                <i class="bi bi-person-gear me-2"></i> My Profile
                             </a>
                         </li>
                     </ul>
@@ -83,7 +91,7 @@
     <div class="row mb-4">
         <div class="col">
             <h2 class="fw-bold">Welcome, {{ $user->name }}</h2>
-            <p class="text-muted">Domain Verified: <strong>@student.kptm.edu.my</strong></p>
+            <p class="text-muted">You are using KPTMBP SOES<strong>have a great exam!</strong></p>
         </div>
     </div>
 
@@ -252,6 +260,88 @@
                         </div>
                     </div>
                 @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-pane fade" id="tab-profile" role="tabpanel">
+        <div class="card border-0 shadow-sm rounded-4 mt-3">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h5>
+                <p class="text-muted small">Update your name, matric number, and security credentials.</p>
+            </div>
+            <div class="card-body p-4">
+
+                {{-- Alerts --}}
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                <form action="{{ route('student.profile.update') }}" method="POST">
+                    @csrf
+
+                    <!-- Personal Information -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label fw-semibold">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ Auth::user()->name }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="matric_number" class="form-label fw-semibold">Matric Number</label>
+                            <input type="text" class="form-control" id="matric_number" name="matric_number" value="{{ $student->matric_number ?? 'N/A' }}" required>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Email Address</label>
+                            <input type="email" class="form-control bg-light" value="{{ Auth::user()->email }}" readonly>
+                            <div class="form-text">Domain Verified: @student.kptm.edu.my</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 text-muted">
+
+                    <!-- Password Change Section -->
+                    <h6 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2 text-warning"></i>Change Password</h6>
+                    <p class="text-muted small mb-3">Leave blank if you do not wish to change your password.</p>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="current_password" class="form-label fw-semibold">Current Password</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" placeholder="••••••••">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="new_password" class="form-label fw-semibold">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Min 8 characters">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="new_password_confirmation" class="form-label fw-semibold">Confirm New Password</label>
+                            <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" placeholder="Repeat new password">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-check-lg me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+
             </div>
         </div>
     </div>

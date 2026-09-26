@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
+use App\Models\User;
 use App\Models\StudentAnswer;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamViolation;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
@@ -84,6 +86,44 @@ class StudentController extends Controller
             'exams',
             'studentClasses'
         ));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        // Ensure student is logged in
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Session expired. Please log in.');
+        }
+
+        $user = Auth::user();
+
+        // Validation
+        $rules = [
+            'name' => 'required|string|max:255',
+            'matric_number' => 'required|string|max:50',
+        ];
+
+        // If changing password, validate password fields
+        if ($request->filled('current_password') || $request->filled('new_password')) {
+            $rules['current_password'] = ['required', 'current_password'];
+            $rules['new_password'] = ['required', 'string', 'min:8', 'confirmed'];
+        }
+
+        $request->validate($rules);
+
+        // 1. Update User Table (Name & optional Password)
+        $userUpdate = ['name' => $request->name];
+        if ($request->filled('new_password')) {
+            $userUpdate['password'] = Hash::make($request->new_password);
+        }
+        User::where('user_id', $user->user_id ?? $user->id)->update($userUpdate);
+
+        // 2. Update Student Table (Matric Number)
+        Student::where('user_id', $user->user_id ?? $user->id)->update([
+            'matric_number' => $request->matric_number
+        ]);
+
+        return redirect()->back()->with('success', 'Profile and password updated successfully.');
     }
 
     /**
