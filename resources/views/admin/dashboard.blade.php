@@ -95,16 +95,25 @@
 
    <!-- Profile Change Monitoring Logs -->
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-clock-history me-2 text-primary"></i>Profile Audit & Activity Monitoring Logs
-                </h5>
-                <small class="text-muted">Track all personal detail modifications made by Lecturers, Students, and Admins</small>
+                <h5 class="fw-bold mb-1"><i class="bi bi-clock-history me-2 text-primary"></i>Profile Audit & Activity Monitoring Logs</h5>
+                <p class="text-muted small mb-0">Track all personal detail modifications made by Lecturers, Students, and Admins</p>
             </div>
-            <span class="badge bg-primary px-3 py-2">
-                {{ isset($auditLogs) ? $auditLogs->total() : 0 }} Recorded Changes
-            </span>
+            
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary px-3 py-2 fw-semibold">
+                    {{ count($logs ?? []) }} Recorded Changes
+                </span>
+
+                <!-- CLEAR LOGS BUTTON -->
+                <form action="{{ route('admin.clearAuditLogs') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all activity logs? This action cannot be undone.');">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm shadow-sm fw-bold">
+                        <i class="bi bi-trash3-fill me-1"></i> Clear Logs
+                    </button>
+                </form>
+            </div>
         </div>
 
         <div class="card-body p-3">

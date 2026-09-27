@@ -238,4 +238,16 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'User "' . $userName . '" has been deleted.');
     }
+
+    public function clearAuditLogs()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Truncate or delete all audit log records
+        ProfileAuditLog::truncate();
+
+        return redirect()->back()->with('success', 'All activity and audit logs have been cleared successfully.');
+    }
 }
