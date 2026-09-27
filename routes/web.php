@@ -224,7 +224,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/users', [AdminController::class, 'index'])->name('admin.users');
         // Admin Only Routes
         Route::middleware(['role:admin'])->prefix('admin')->group(function () {
-            Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+            // To this:
+            Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
             // ... higher level admin routes
         });
 
