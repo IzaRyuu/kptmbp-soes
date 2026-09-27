@@ -542,4 +542,12 @@ class StudentController extends Controller
         return view('student.assessment-history', compact('history'));
     }
 
+    public function profile()
+    {
+        $user = Auth::user();
+        $student = $user->student;
+
+        return view('student.profile', compact('user', 'student'));
+    }
+
 }
