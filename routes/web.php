@@ -213,6 +213,10 @@ Route::middleware(['auth'])->group(function () {
         // Add Profile Update Route
         Route::post('/profile/update', [StudentController::class, 'updateProfile'])
             ->name('student.profile.update');
+        Route::get('/profile', [StudentController::class, 'profile'])
+            ->name('student.profile');
+        Route::post('/profile/update', [StudentController::class, 'updateProfile'])
+            ->name('student.profile.update');
     });
 
     // Admin Dashboard User Management Actions

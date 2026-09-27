@@ -91,45 +91,88 @@ class StudentController extends Controller
 
     public function updateProfile(Request $request)
     {
-        // Fetch fresh User instance using authenticated ID
-        $authUserId = Auth::id();
-        $user = User::where('id', $authUserId)->orWhere('user_id', $authUserId)->firstOrFail();
+        $user = Auth::user();
 
-        // 1. Validate Input
-        $request->validate([
-            'name'          => 'required|string|max:255',
-            'matric_number' => 'nullable|string|max:50',
-            'password'      => 'nullable|string|min:8|confirmed',
-        ]);
-
-        // 2. Update User Name
-        $user->name = $request->name;
-
-        // Optional: Update password if provided
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not authenticated.');
         }
 
-        $user->save();
+        $userId = $user->user_id ?? $user->id ?? null;
 
-        // 3. Update or Create Student Record
-        $student = Student::firstOrNew(['user_id' => $user->id ?? $user->user_id]);
+        if (!$userId) {
+            return redirect()->back()->with('error', 'Unable to determine user ID.');
+        }
 
-        if ($request->filled('matric_number')) {
-            $val = $request->input('matric_number');
+        // Fetch existing student record
+        $student = DB::table('students')->where('user_id', $userId)->first();
+        $oldMatric = $student->matric_number ?? $student->matrix_number ?? $student->matric_no ?? 'N/A';
+        $newMatric = $request->input('matric_number') ?? $request->input('matric_no');
 
-            if (Schema::hasColumn('students', 'matric_number')) {
-                $student->matric_number = $val;
-            }
-            if (Schema::hasColumn('students', 'matrix_number')) {
-                $student->matrix_number = $val;
-            }
-            if (Schema::hasColumn('students', 'matric_no')) {
-                $student->matric_no = $val;
+        $actorName = $user->name ?? 'Student';
+        $userRole = ucfirst($user->role ?? 'Student');
+
+        // 1. Audit Logging BEFORE updating database
+        $fieldsToTrack = [
+            'name' => $user->name ?? 'N/A',
+            'email' => $user->email ?? 'N/A',
+            'matric_number' => $oldMatric
+        ];
+
+        foreach ($fieldsToTrack as $field => $oldVal) {
+            $inputKey = ($field === 'matric_number') ? 'matric_number' : $field;
+            if ($request->filled($inputKey)) {
+                $newVal = $request->input($inputKey);
+
+                if ((string)$oldVal !== (string)$newVal) {
+                    ProfileAuditLog::create([
+                        'user_id'         => $userId,
+                        'user_name'       => $actorName,
+                        'user_role'       => $userRole,
+                        'changed_field'   => strtoupper(str_replace('_', ' ', $field)),
+                        'old_value'       => (string)$oldVal,
+                        'new_value'       => (string)$newVal,
+                        'changed_by_name' => $actorName,
+                    ]);
+                }
             }
         }
 
-        $student->save();
+        // 2. Update Users table
+        $userUpdate = [];
+        if ($request->filled('name')) {
+            $userUpdate['name'] = $request->input('name');
+        }
+        if ($request->filled('email')) {
+            $userUpdate['email'] = $request->input('email');
+        }
+
+        $primaryKey = isset($user->user_id) ? 'user_id' : 'id';
+
+        if (!empty($userUpdate)) {
+            $userUpdate['updated_at'] = now();
+            DB::table('users')->where($primaryKey, $userId)->update($userUpdate);
+        }
+
+        // 3. Update or Insert into Students table (Matric Number)
+        if ($newMatric !== null) {
+            // Detect which column exists in students table
+            $columns = Schema::getColumnListing('students');
+            $matricCol = in_array('matric_number', $columns) ? 'matric_number' : (in_array('matrix_number', $columns) ? 'matrix_number' : 'matric_no');
+
+            if ($student) {
+                DB::table('students')->where('user_id', $userId)->update([
+                    $matricCol   => $newMatric,
+                    'updated_at' => now(),
+                ]);
+            } else {
+                DB::table('students')->insert([
+                    'user_id'    => $userId,
+                    $matricCol   => $newMatric,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
@@ -525,9 +568,12 @@ class StudentController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        $student = $user->student;
+        
+        // Fetch associated student record
+        $student = DB::table('students')
+            ->where('user_id', $user->user_id ?? $user->id)
+            ->first();
 
         return view('student.profile', compact('user', 'student'));
     }
-
 }
