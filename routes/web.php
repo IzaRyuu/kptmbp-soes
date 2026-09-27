@@ -236,10 +236,12 @@ Route::middleware(['auth'])->group(function () {
             // ... lecturer routes
         });
 
-        // Student Only Routes
+        // In routes/web.php under student group:
         Route::middleware(['role:student'])->prefix('student')->group(function () {
-            Route::get('/dashboard', [StudentController::class, 'index'])->name('student.dashboard');
-            Route::get('/profile', [StudentController::class, 'profile'])->name('student.profile');
+            Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+            
+            // Change name from 'student.profile' to 'student.profile.edit'
+            Route::get('/profile', [StudentController::class, 'profile'])->name('student.profile.edit');
             Route::post('/profile', [StudentController::class, 'updateProfile'])->name('student.profile.update');
         });
     });
