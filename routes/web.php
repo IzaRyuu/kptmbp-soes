@@ -221,4 +221,5 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/admin/users/{id}/reset-password', [App\Http\Controllers\AdminController::class, 'resetPassword'])->name('admin.users.resetPassword');
         Route::delete('/admin/users/{id}/delete', [App\Http\Controllers\AdminController::class, 'deleteUser'])->name('admin.users.delete');
         Route::post('/admin/clear-audit-logs', [AdminController::class, 'clearAuditLogs'])->name('admin.clearAuditLogs');
+        Route::get('/admin/users', [AdminController::class, 'index'])->name('admin.users');
     });
