@@ -77,18 +77,21 @@
             </div>
         </div>
 
-        <!-- Total Users Card -->
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm p-3 bg-white h-100">
-                <div class="d-flex justify-content-between align-items-center">
+       <!-- TOTAL USERS CARD -->
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <span class="text-muted small fw-bold text-uppercase">Total Users</span>
-                        <h2 class="fw-bold text-dark mb-0">{{ $totalUsers }}</h2>
+                        <span class="text-uppercase text-muted fw-bold small">Total Users</span>
+                        <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($users ?? []) }}</h2>
                     </div>
-                    <div class="bg-light text-dark p-3 rounded-circle border">
-                        <i class="bi bi-people fs-4"></i>
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-people fs-4 text-secondary"></i>
                     </div>
                 </div>
+                <a href="{{ route('admin.users') ?? '#all-users' }}" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-info-circle"></i> Click to view details
+                </a>
             </div>
         </div>
     </div>
