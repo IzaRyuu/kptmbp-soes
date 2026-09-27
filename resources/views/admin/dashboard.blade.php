@@ -77,7 +77,7 @@
             </div>
         </div>
 
-       <!-- TOTAL USERS CARD -->
+        <!-- TOTAL USERS CARD -->
         <div class="card border-0 shadow-sm rounded-3 h-100">
             <div class="card-body p-4 d-flex flex-column justify-content-between">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -89,7 +89,7 @@
                         <i class="bi bi-people fs-4 text-secondary"></i>
                     </div>
                 </div>
-                <a href="{{ route('admin.users') ?? '#all-users' }}" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
+                <a href="#users-section" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center gap-1" onclick="if(typeof filterUsers === 'function') filterUsers('all');">
                     <i class="bi bi-info-circle"></i> Click to view details
                 </a>
             </div>
