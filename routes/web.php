@@ -238,7 +238,8 @@ Route::middleware(['auth'])->group(function () {
 
         // In routes/web.php under student group:
         Route::middleware(['role:student'])->prefix('student')->group(function () {
-            Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+            // To this:
+            Route::get('/dashboard', [StudentController::class, 'index'])->name('student.dashboard');
             
             // Change name from 'student.profile' to 'student.profile.edit'
             Route::get('/profile', [StudentController::class, 'profile'])->name('student.profile.edit');
