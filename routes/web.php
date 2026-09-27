@@ -222,4 +222,22 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/users/{id}/delete', [App\Http\Controllers\AdminController::class, 'deleteUser'])->name('admin.users.delete');
         Route::post('/admin/clear-audit-logs', [AdminController::class, 'clearAuditLogs'])->name('admin.clearAuditLogs');
         Route::get('/admin/users', [AdminController::class, 'index'])->name('admin.users');
+        // Admin Only Routes
+        Route::middleware(['role:admin'])->prefix('admin')->group(function () {
+            Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+            // ... higher level admin routes
+        });
+
+        // Lecturer Only Routes
+        Route::middleware(['role:lecturer'])->prefix('lecturer')->group(function () {
+            Route::get('/dashboard', [LecturerController::class, 'dashboard'])->name('lecturer.dashboard');
+            // ... lecturer routes
+        });
+
+        // Student Only Routes
+        Route::middleware(['role:student'])->prefix('student')->group(function () {
+            Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+            Route::get('/profile', [StudentController::class, 'profile'])->name('student.profile');
+            Route::post('/profile', [StudentController::class, 'updateProfile'])->name('student.profile.update');
+        });
     });
