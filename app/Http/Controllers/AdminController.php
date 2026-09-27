@@ -192,22 +192,24 @@ class AdminController extends Controller
             }
         }
 
-        // Save individual audit records for modified fields safely
+        // Save individual audit records with changed_by_name mapped
         if (!empty($auditEntries)) {
             $existingColumns = \Illuminate\Support\Facades\Schema::getColumnListing('profile_audit_logs');
+            $operatorName = Auth::user()->name ?? 'System Administrator';
 
             foreach ($auditEntries as $entry) {
                 $candidateData = [
-                    'user_id'       => $user->user_id,
-                    'user_name'     => $user->name,
-                    'user_role'     => $user->role,
-                    'changed_field' => $entry['changed_field'],
-                    'old_value'     => (string) $entry['old_value'],
-                    'new_value'     => (string) $entry['new_value'],
-                    'updated_by'    => Auth::user()->name ?? 'System Administrator',
+                    'user_id'         => $user->user_id,
+                    'user_name'       => $user->name,
+                    'user_role'       => $user->role,
+                    'changed_field'   => $entry['changed_field'],
+                    'old_value'       => (string) $entry['old_value'],
+                    'new_value'       => (string) $entry['new_value'],
+                    'changed_by_name' => $operatorName,
+                    'updated_by'      => $operatorName,
                 ];
 
-                // Only insert values into columns that actually exist in your database schema
+                // Filter dynamically to column schema
                 $logData = array_intersect_key($candidateData, array_flip($existingColumns));
 
                 \App\Models\ProfileAuditLog::create($logData);
