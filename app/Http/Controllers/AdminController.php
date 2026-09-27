@@ -192,16 +192,18 @@ class AdminController extends Controller
             }
         }
 
-        // Save individual audit records with changed_by_name mapped
+        // Save audit records under the operator's role (Admin/Lecturer) so it appears in Admin Logs
         if (!empty($auditEntries)) {
             $existingColumns = \Illuminate\Support\Facades\Schema::getColumnListing('profile_audit_logs');
-            $operatorName = Auth::user()->name ?? 'System Administrator';
+            $operator = Auth::user();
+            $operatorName = $operator->name ?? 'System Administrator';
+            $operatorRole = $operator->role ?? 'admin'; // Categorizes the log entry into the Admin tab
 
             foreach ($auditEntries as $entry) {
                 $candidateData = [
                     'user_id'         => $user->user_id,
                     'user_name'       => $user->name,
-                    'user_role'       => $user->role,
+                    'user_role'       => $operatorRole, // Saved as admin/lecturer so tab filter catches it
                     'changed_field'   => $entry['changed_field'],
                     'old_value'       => (string) $entry['old_value'],
                     'new_value'       => (string) $entry['new_value'],
