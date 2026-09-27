@@ -91,65 +91,45 @@ class StudentController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $user = Auth::user();
+        // Fetch fresh User instance using authenticated ID
+        $authUserId = Auth::id();
+        $user = User::where('id', $authUserId)->orWhere('user_id', $authUserId)->firstOrFail();
 
-        if (!$user) {
-            return redirect()->back()->with('error', 'User not authenticated.');
+        // 1. Validate Input
+        $request->validate([
+            'name'          => 'required|string|max:255',
+            'matric_number' => 'nullable|string|max:50',
+            'password'      => 'nullable|string|min:8|confirmed',
+        ]);
+
+        // 2. Update User Name
+        $user->name = $request->name;
+
+        // Optional: Update password if provided
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
         }
 
-        // Determine the user's primary ID safely
-        $userId = is_object($user) ? ($user->user_id ?? $user->id ?? null) : null;
+        $user->save();
 
-        if (!$userId) {
-            return redirect()->back()->with('error', 'Unable to determine user ID.');
-        }
+        // 3. Update or Create Student Record
+        $student = Student::firstOrNew(['user_id' => $user->id ?? $user->user_id]);
 
-        // 1. Audit Logging BEFORE updating database
-        $actorName = is_object($user) ? ($user->name ?? 'System Admin') : 'System Admin';
-        $targetUserName = is_object($user) ? ($user->name ?? 'Unknown') : 'Unknown';
-        $userRole = ucfirst(is_object($user) ? ($user->role ?? 'Student') : 'Student');
+        if ($request->filled('matric_number')) {
+            $val = $request->input('matric_number');
 
-        $fieldsToTrack = ['name', 'email', 'student_id', 'matric_no'];
-
-        foreach ($fieldsToTrack as $field) {
-            if ($request->filled($field)) {
-                $oldVal = is_object($user) ? ($user->$field ?? 'N/A') : 'N/A';
-                $newVal = $request->input($field);
-
-                if ((string)$oldVal !== (string)$newVal) {
-                    ProfileAuditLog::create([
-                        'user_id'         => $userId,
-                        'user_name'       => $targetUserName,
-                        'user_role'       => $userRole,
-                        'changed_field'   => strtoupper(str_replace('_', ' ', $field)),
-                        'old_value'       => (string)$oldVal,
-                        'new_value'       => (string)$newVal,
-                        'changed_by_name' => $actorName,
-                    ]);
-                }
+            if (Schema::hasColumn('students', 'matric_number')) {
+                $student->matric_number = $val;
+            }
+            if (Schema::hasColumn('students', 'matrix_number')) {
+                $student->matrix_number = $val;
+            }
+            if (Schema::hasColumn('students', 'matric_no')) {
+                $student->matric_no = $val;
             }
         }
 
-        // 2. Prepare payload for raw DB query
-        $updateData = [];
-        if ($request->filled('name')) {
-            $updateData['name'] = $request->input('name');
-        }
-        if ($request->filled('email')) {
-            $updateData['email'] = $request->input('email');
-        }
-
-        // 3. Update database using direct DB query (bypasses Eloquent model issues)
-        if (!empty($updateData)) {
-            $updateData['updated_at'] = now();
-
-            // Dynamically detects whether primary key is 'user_id' or 'id'
-            $primaryKey = isset($user->user_id) ? 'user_id' : 'id';
-
-            DB::table('users')
-                ->where($primaryKey, $userId)
-                ->update($updateData);
-        }
+        $student->save();
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }

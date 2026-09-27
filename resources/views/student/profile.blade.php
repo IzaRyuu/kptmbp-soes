@@ -110,17 +110,14 @@
                                 <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
                             </div>
 
+                            <!-- Matric Number Input Field -->
                             <div class="col-md-6 mb-3">
-                                <label for="matric_number" class="form-label font-weight-bold">Matric Number</label>
-                                <input 
-                                    type="text" 
-                                    id="matric_number" 
+                                <label for="matric_number" class="form-label fw-semibold">Matric Number</label>
+                                <input type="text" 
                                     name="matric_number" 
+                                    id="matric_number" 
                                     class="form-control" 
-                                    placeholder="e.g. BP0722001"
-                                    value="{{ old('matric_number', $student->matric_number ?? $student->matrix_number ?? $student->matric_no ?? '') }}" 
-                                    required
-                                >
+                                    value="{{ old('matric_number', auth()->user()->student->matric_number ?? auth()->user()->student->matrix_number ?? auth()->user()->student->matric_no ?? '') }}">
                             </div>
 
                             <div class="col-md-12">
