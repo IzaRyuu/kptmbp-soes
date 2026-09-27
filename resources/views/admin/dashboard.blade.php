@@ -78,20 +78,22 @@
         </div>
 
         <!-- TOTAL USERS CARD -->
-        <div class="card border-0 shadow-sm rounded-3 h-100" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#allUsersModal">
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <span class="text-uppercase text-muted fw-bold small">Total Users</span>
-                        <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($allUsers ?? []) }}</h2>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#allUsersModal">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="text-uppercase text-muted fw-bold small">Total Users</span>
+                            <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($allUsers ?? []) }}</h2>
+                        </div>
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-people fs-4 text-secondary"></i>
+                        </div>
                     </div>
-                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                        <i class="bi bi-people fs-4 text-secondary"></i>
-                    </div>
+                    <span class="text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-info-circle"></i> Click to view details
+                    </span>
                 </div>
-                <span class="text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
-                    <i class="bi bi-info-circle"></i> Click to view details
-                </span>
             </div>
         </div>
     </div>
