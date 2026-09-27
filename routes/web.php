@@ -238,7 +238,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Student Only Routes
         Route::middleware(['role:student'])->prefix('student')->group(function () {
-            Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+            Route::get('/dashboard', [StudentController::class, 'index'])->name('student.dashboard');
             Route::get('/profile', [StudentController::class, 'profile'])->name('student.profile');
             Route::post('/profile', [StudentController::class, 'updateProfile'])->name('student.profile.update');
         });
