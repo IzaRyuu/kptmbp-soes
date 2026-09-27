@@ -77,10 +77,10 @@
             </div>
         </div>
 
-        <!-- Total Users Card -->
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm p-3 bg-white h-100">
-                <div class="d-flex justify-content-between align-items-center">
+        <!-- TOTAL USERS CARD -->
+        <div class="card border-0 shadow-sm rounded-3 h-100" style="cursor: pointer;" onclick="showTab('all')">
+            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <span class="text-uppercase text-muted fw-bold small">Total Users</span>
                         <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($users ?? []) }}</h2>
@@ -89,7 +89,7 @@
                         <i class="bi bi-people fs-4 text-secondary"></i>
                     </div>
                 </div>
-                <a href="#users-section" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center gap-1" onclick="if(typeof filterUsers === 'function') filterUsers('all');">
+                <a href="javascript:void(0)" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
                     <i class="bi bi-info-circle"></i> Click to view details
                 </a>
             </div>
@@ -502,5 +502,37 @@ function filterLogs(role, btnElement) {
         }
     });
 }
+
+function showTab(role) {
+    // 1. Remove active styles from all tab buttons
+    document.querySelectorAll('.log-tab-btn').forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline-primary');
+    });
+
+    // 2. Highlight the matching tab button
+    const targetBtn = document.getElementById('tab-' + role) || document.querySelector(`[onclick="showTab('${role}')"]`);
+    if (targetBtn && targetBtn.classList.contains('log-tab-btn')) {
+        targetBtn.classList.remove('btn-outline-primary');
+        targetBtn.classList.add('btn-primary', 'active');
+    }
+
+    // 3. Filter the log entries / user cards
+    const logItems = document.querySelectorAll('.log-item');
+    logItems.forEach(item => {
+        if (role === 'all' || item.getAttribute('data-role') === role) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    // 4. Smooth scroll down to the logs section
+    const logsSection = document.getElementById('audit-logs-section') || document.querySelector('.card-body');
+    if (logsSection) {
+        logsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 </script>
 @endsection
