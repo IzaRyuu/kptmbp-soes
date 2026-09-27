@@ -77,10 +77,10 @@
             </div>
         </div>
 
-        <!-- TOTAL USERS CARD -->
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- Total Users Card -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-uppercase text-muted fw-bold small">Total Users</span>
                         <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($users ?? []) }}</h2>
