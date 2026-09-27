@@ -231,7 +231,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Lecturer Only Routes
         Route::middleware(['role:lecturer'])->prefix('lecturer')->group(function () {
-            Route::get('/dashboard', [LecturerController::class, 'dashboard'])->name('lecturer.dashboard');
+            // To this:
+            Route::get('/dashboard', [LecturerController::class, 'index'])->name('lecturer.dashboard');
             // ... lecturer routes
         });
 
