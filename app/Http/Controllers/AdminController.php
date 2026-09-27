@@ -29,6 +29,9 @@ class AdminController extends Controller
         $totalStudents  = $students->count();
         $totalUsers     = \App\Models\User::count();
 
+        // Fetch all registered users with their details
+        $allUsers = \App\Models\User::orderBy('created_at', 'desc')->get();
+
         // Fetch latest profile audit logs
         $auditLogs = ProfileAuditLog::orderBy('created_at', 'desc')->paginate(10);
 
@@ -39,6 +42,7 @@ class AdminController extends Controller
             'users', 
             'lecturers', 
             'students',
+            'allUsers',
             'auditLogs'
         ));
     }

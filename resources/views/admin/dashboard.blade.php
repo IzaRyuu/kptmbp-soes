@@ -78,20 +78,20 @@
         </div>
 
         <!-- TOTAL USERS CARD -->
-        <div class="card border-0 shadow-sm rounded-3 h-100" style="cursor: pointer;" onclick="showTab('all')">
+        <div class="card border-0 shadow-sm rounded-3 h-100" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#allUsersModal">
             <div class="card-body p-4 d-flex flex-column justify-content-between">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <span class="text-uppercase text-muted fw-bold small">Total Users</span>
-                        <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($users ?? []) }}</h2>
+                        <h2 class="fw-bold text-dark mt-1 mb-0">{{ $totalUsers ?? count($allUsers ?? []) }}</h2>
                     </div>
                     <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                         <i class="bi bi-people fs-4 text-secondary"></i>
                     </div>
                 </div>
-                <a href="javascript:void(0)" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
+                <span class="text-secondary small fw-semibold d-inline-flex align-items-center gap-1">
                     <i class="bi bi-info-circle"></i> Click to view details
-                </a>
+                </span>
             </div>
         </div>
     </div>
@@ -535,4 +535,62 @@ function showTab(role) {
 }
 
 </script>
+
+<!-- ALL REGISTERED USERS MODAL -->
+<div class="modal fade" id="allUsersModal" tabindex="-1" aria-labelledby="allUsersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="allUsersModalLabel">
+                    <i class="bi bi-people-fill me-2 text-primary"></i>All Registered Users ({{ count($allUsers ?? []) }})
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4">#</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Role</th>
+                                <th scope="col" class="pe-4">Registered Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($allUsers ?? [] as $index => $user)
+                                <tr>
+                                    <td class="ps-4 fw-bold text-muted">{{ $index + 1 }}</td>
+                                    <td class="fw-bold text-dark">{{ $user->name }}</td>
+                                    <td class="text-secondary">{{ $user->email }}</td>
+                                    <td>
+                                        @if(strtolower($user->role) == 'admin')
+                                            <span class="badge bg-danger px-2 py-1">Admin</span>
+                                        @elseif(strtolower($user->role) == 'lecturer')
+                                            <span class="badge bg-primary px-2 py-1">Lecturer</span>
+                                        @else
+                                            <span class="badge bg-success px-2 py-1">Student</span>
+                                        @endif
+                                    </td>
+                                    <td class="pe-4 text-muted small">
+                                        {{ $user->created_at ? $user->created_at->format('d M Y, h:i A') : 'N/A' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No users found in the system.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
