@@ -238,7 +238,7 @@ class LecturerController extends Controller
                 })
             ],
             'duration_minutes' => 'required|integer|min:1',
-            'start_time' => 'required|date|after_or_equal:now',
+            'start_time' => 'required|date|after_or_equal:today',
             'end_time'   => 'required|date|after:start_time',
             'class_id'         => 'nullable|exists:classes,class_id',
             'course_id'        => 'nullable|exists:courses,course_id',
