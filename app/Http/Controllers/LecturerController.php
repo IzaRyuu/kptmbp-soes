@@ -228,15 +228,24 @@ class LecturerController extends Controller
     {
         // 1. Validate incoming form inputs
         $request->validate([
-            'title'            => 'required|string|max:255',
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('exams')->where(function ($query) use ($request) {
+                    return $query->where('title', $request->title)
+                                ->where('class_id', $request->class_id);
+                })
+            ],
             'duration_minutes' => 'required|integer|min:1',
             'start_time' => 'required|date|after_or_equal:now',
             'end_time'   => 'required|date|after:start_time',
             'class_id'         => 'nullable|exists:classes,class_id',
             'course_id'        => 'nullable|exists:courses,course_id',
         ], [
-        'start_time.after_or_equal' => 'The exam start time cannot be in the past.',
-        'end_time.after'            => 'The end time must be strictly after the start time.',
+            'title.unique'              => 'An exam with this title already exists for the selected class.',
+            'start_time.after_or_equal' => 'The exam start time cannot be in the past.',
+            'end_time.after'            => 'The end time must be strictly after the start time.',
         ]);
 
         // 2. Fetch the logged-in lecturer's record
