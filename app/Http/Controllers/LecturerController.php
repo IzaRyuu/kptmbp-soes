@@ -228,7 +228,15 @@ class LecturerController extends Controller
     {
         // 1. Validate incoming form inputs
         $request->validate([
-            'title'            => 'required|string|max:255',
+            'title'        => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('exams')->where(function ($query) use ($request) {
+                    return $query->where('title', $request->title)
+                                ->where('class_id', $request->target_class_id);
+                })
+            ],
             'duration_minutes' => 'required|integer|min:1',
             'start_time' => 'required|date|after_or_equal:now',
             'end_time'   => 'required|date|after:start_time',
