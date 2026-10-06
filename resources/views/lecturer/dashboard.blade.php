@@ -743,8 +743,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">End Time</label>
-                        <input type="datetime-local" name="end_time" class="form-control" required>
+                        <label for="end_time" class="form-label fw-semibold">End Time</label>
+                        <input type="datetime-local" 
+                            name="end_time" 
+                            id="end_time" 
+                            class="form-control" 
+                            required>
                     </div>
 
                     <div class="form-check mb-3">
@@ -1090,6 +1094,23 @@ document.addEventListener('change', function(e) {
         const isChecked = e.target.checked;
         isSelecting = isChecked;
         document.querySelectorAll('.violation-checkbox').forEach(cb => cb.checked = isChecked);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+
+    if (startTimeInput && endTimeInput) {
+        startTimeInput.addEventListener('change', function () {
+            // Set the min attribute of end_time to match start_time
+            endTimeInput.min = this.value;
+
+            // If end_time is currently equal to or earlier than start_time, reset it
+            if (endTimeInput.value && endTimeInput.value <= this.value) {
+                endTimeInput.value = '';
+            }
+        });
     }
 });
 

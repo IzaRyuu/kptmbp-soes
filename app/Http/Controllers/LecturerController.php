@@ -231,10 +231,12 @@ class LecturerController extends Controller
             'title'            => 'required|string|max:255',
             'duration_minutes' => 'required|integer|min:1',
             'start_time' => 'required|date|after_or_equal:now',
+            'end_time'   => 'required|date|after:start_time',
             'class_id'         => 'nullable|exists:classes,class_id',
             'course_id'        => 'nullable|exists:courses,course_id',
         ], [
         'start_time.after_or_equal' => 'The exam start time cannot be in the past.',
+        'end_time.after'            => 'The end time must be strictly after the start time.',
         ]);
 
         // 2. Fetch the logged-in lecturer's record
