@@ -230,8 +230,11 @@ class LecturerController extends Controller
         $request->validate([
             'title'            => 'required|string|max:255',
             'duration_minutes' => 'required|integer|min:1',
+            'start_time' => 'required|date|after_or_equal:now',
             'class_id'         => 'nullable|exists:classes,class_id',
             'course_id'        => 'nullable|exists:courses,course_id',
+        ], [
+        'start_time.after_or_equal' => 'The exam start time cannot be in the past.',
         ]);
 
         // 2. Fetch the logged-in lecturer's record

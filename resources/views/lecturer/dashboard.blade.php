@@ -731,9 +731,15 @@
                         <input type="number" name="duration_minutes" class="form-control" placeholder="60" required>
                     </div>
 
+                    <!-- Find your Start Time input and set min attribute -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Start Time</label>
-                        <input type="datetime-local" name="start_time" class="form-control" required>
+                        <label for="start_time" class="form-label fw-semibold">Start Time</label>
+                        <input type="datetime-local" 
+                            name="start_time" 
+                            id="start_time" 
+                            class="form-control" 
+                            min="{{ now()->format('Y-m-d\TH:i') }}" 
+                            required>
                     </div>
 
                     <div class="mb-3">
