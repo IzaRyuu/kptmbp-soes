@@ -81,10 +81,10 @@
                 </span>
 
                 <!-- Logout Form -->
-                <form method="POST" action="{{ route('logout') }}" class="m-0">
+                <form method="POST" action="{{ route('logout') }}" id="logout-form" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                    <button type="submit" class="btn btn-link text-decoration-none nav-link">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
                     </button>
                 </form>
             </div>
