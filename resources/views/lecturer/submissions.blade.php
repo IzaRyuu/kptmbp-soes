@@ -44,16 +44,23 @@
                     <tbody>
                         @forelse($exam->attempts as $attempt)
                             @php
-                                $matricNo = $attempt->student->matric_number 
-                                         ?? $attempt->student->user->matric_number 
-                                         ?? $attempt->student->matric_no 
-                                         ?? null;
+                                // Get the student object (could be User model or Student model)
+                                $studentObj = $attempt->student;
+                                
+                                // Check all possible places where matric number is stored
+                                $studentId = $studentObj->matric_number 
+                                        ?? $studentObj->matric_no 
+                                        ?? $studentObj->student_number
+                                        ?? $studentObj->user->matric_number 
+                                        ?? $studentObj->user->matric_no 
+                                        ?? $studentObj->studentProfile->matric_number 
+                                        ?? $studentObj->profile->matric_number
+                                        ?? null;
 
-                                if (empty($matricNo)) {
-                                    $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
-                                    $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : ($attempt->student->student_id ?? 'N/A');
-                                } else {
-                                    $studentId = $matricNo;
+                                // Fallback ONLY if matric_number is completely absent across all models
+                                if (!$studentId) {
+                                    $email = $studentObj->user->email ?? $studentObj->email ?? '';
+                                    $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
                                 }
                             @endphp
                             <tr>
@@ -130,16 +137,23 @@
                         <tbody>
                             @forelse($exam->attempts as $index => $attempt)
                                 @php
-                                    $matricNo = $attempt->student->matric_number 
-                                             ?? $attempt->student->user->matric_number 
-                                             ?? $attempt->student->matric_no 
-                                             ?? null;
+                                    // Get the student object (could be User model or Student model)
+                                    $studentObj = $attempt->student;
+                                    
+                                    // Check all possible places where matric number is stored
+                                    $studentId = $studentObj->matric_number 
+                                            ?? $studentObj->matric_no 
+                                            ?? $studentObj->student_number
+                                            ?? $studentObj->user->matric_number 
+                                            ?? $studentObj->user->matric_no 
+                                            ?? $studentObj->studentProfile->matric_number 
+                                            ?? $studentObj->profile->matric_number
+                                            ?? null;
 
-                                    if (empty($matricNo)) {
-                                        $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
-                                        $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : ($attempt->student->student_id ?? 'N/A');
-                                    } else {
-                                        $studentId = $matricNo;
+                                    // Fallback ONLY if matric_number is completely absent across all models
+                                    if (!$studentId) {
+                                        $email = $studentObj->user->email ?? $studentObj->email ?? '';
+                                        $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
                                     }
                                 @endphp
                                 <tr>
