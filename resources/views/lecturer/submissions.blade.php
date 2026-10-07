@@ -44,12 +44,17 @@
                     <tbody>
                         @forelse($exam->attempts as $attempt)
                             @php
-                                // Extract email prefix before @ to use as Student ID / No Matriks
-                                $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
-                                $extractedMatricId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
-                                
-                                // Fallback to database ID columns if email extraction fails
-                                $studentId = $extractedMatricId !== 'N/A' ? $extractedMatricId : ($attempt->student->student_id ?? $attempt->student->id_number ?? 'N/A');
+                                $matricNo = $attempt->student->matric_number 
+                                         ?? $attempt->student->user->matric_number 
+                                         ?? $attempt->student->matric_no 
+                                         ?? null;
+
+                                if (empty($matricNo)) {
+                                    $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
+                                    $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : ($attempt->student->student_id ?? 'N/A');
+                                } else {
+                                    $studentId = $matricNo;
+                                }
                             @endphp
                             <tr>
                                 <td class="fw-bold ps-4">
@@ -125,9 +130,17 @@
                         <tbody>
                             @forelse($exam->attempts as $index => $attempt)
                                 @php
-                                    $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
-                                    $extractedMatricId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
-                                    $studentId = $extractedMatricId !== 'N/A' ? $extractedMatricId : ($attempt->student->student_id ?? $attempt->student->id_number ?? 'N/A');
+                                    $matricNo = $attempt->student->matric_number 
+                                             ?? $attempt->student->user->matric_number 
+                                             ?? $attempt->student->matric_no 
+                                             ?? null;
+
+                                    if (empty($matricNo)) {
+                                        $email = $attempt->student->user->email ?? $attempt->student->email ?? '';
+                                        $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : ($attempt->student->student_id ?? 'N/A');
+                                    } else {
+                                        $studentId = $matricNo;
+                                    }
                                 @endphp
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
