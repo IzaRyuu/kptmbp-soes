@@ -46,6 +46,7 @@
                             @php
                                 // Get the student object (could be User model or Student model)
                                 $studentObj = $attempt->student;
+                                dd($studentObj->toArray(), $studentObj->user ?? null);
                                 
                                 // Check all possible places where matric number is stored
                                 $studentId = $studentObj->matric_number 
@@ -139,6 +140,7 @@
                                 @php
                                     // Get the student object (could be User model or Student model)
                                     $studentObj = $attempt->student;
+                                    dd($studentObj->toArray(), $studentObj->user ?? null);
                                     
                                     // Check all possible places where matric number is stored
                                     $studentId = $studentObj->matric_number 
