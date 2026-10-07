@@ -44,20 +44,28 @@
                     <tbody>
                         @forelse($exam->attempts as $attempt)
                             @php
-                                $studentModel = $attempt->student;
-                                $userId = $studentModel->user_id ?? $studentModel->id ?? null;
+                                // Get the student object (could be User model or Student model)
+                                $studentObj = $attempt->student;
+                                
+                                // Check all possible places where matric number is stored
+                                $studentId = $studentObj->matric_number 
+                                        ?? $studentObj->matric_no 
+                                        ?? $studentObj->student_number
+                                        ?? $studentObj->user->matric_number 
+                                        ?? $studentObj->user->matric_no 
+                                        ?? $studentObj->studentProfile->matric_number 
+                                        ?? $studentObj->profile->matric_number
+                                        ?? null;
 
-                                // Try relationships first, then direct DB query
-                                $studentId = $studentModel->matric_number 
-                                        ?? $studentModel->matric_no 
-                                        ?? ($studentModel->user->matric_number ?? null)
-                                        ?? \DB::table('students')->where('user_id', $userId)->value('matric_number')
-                                        ?? \DB::table('users')->where('id', $userId)->value('matric_number')
-                                        ?? 'N/A';
+                                // Fallback ONLY if matric_number is completely absent across all models
+                                if (!$studentId) {
+                                    $email = $studentObj->user->email ?? $studentObj->email ?? '';
+                                    $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
+                                }
                             @endphp
                             <tr>
                                 <td class="fw-bold ps-4">
-                                    {{ $studentModel->name ?? $studentModel->user->name ?? 'N/A' }} 
+                                    {{ $attempt->student->user->name ?? $attempt->student->name ?? 'N/A' }} 
                                     <span class="text-muted fw-normal">({{ $studentId }})</span>
                                 </td>
                                 <td>{{ $attempt->submitted_at ? \Carbon\Carbon::parse($attempt->submitted_at)->format('d M Y, h:i A') : 'In Progress' }}</td>
