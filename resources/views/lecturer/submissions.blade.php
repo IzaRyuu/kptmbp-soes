@@ -44,24 +44,20 @@
                     <tbody>
                         @forelse($exam->attempts as $attempt)
                             @php
-                                // Get the student object (could be User model or Student model)
-                                $studentObj = $attempt->student;
-                                
-                                // Check all possible places where matric number is stored
-                                $studentId = $studentObj->matric_number 
-                                        ?? $studentObj->matric_no 
-                                        ?? $studentObj->student_number
-                                        ?? $studentObj->user->matric_number 
-                                        ?? $studentObj->user->matric_no 
-                                        ?? $studentObj->studentProfile->matric_number 
-                                        ?? $studentObj->profile->matric_number
-                                        ?? null;
+                                // 1. Get User ID or Student ID
+                                $studentModel = $attempt->student;
+                                $userId = $studentModel->user_id ?? $studentModel->id ?? null;
 
-                                // Fallback ONLY if matric_number is completely absent across all models
-                                if (!$studentId) {
-                                    $email = $studentObj->user->email ?? $studentObj->email ?? '';
-                                    $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
-                                }
+                                // 2. Query the database directly for the matric number if not present on $studentModel
+                                $matricNo = $studentModel->matric_number 
+                                        ?? $studentModel->matric_no 
+                                        ?? \App\Models\Student::where('user_id', $userId)->value('matric_number')
+                                        ?? \App\Models\User::where('id', $userId)->value('matric_number')
+                                        ?? \DB::table('students')->where('user_id', $userId)->value('matric_number')
+                                        ?? \DB::table('users')->where('id', $userId)->value('matric_number');
+
+                                // 3. Final fallback logic
+                                $studentId = $matricNo ?: 'N/A';
                             @endphp
                             <tr>
                                 <td class="fw-bold ps-4">
@@ -137,24 +133,20 @@
                         <tbody>
                             @forelse($exam->attempts as $index => $attempt)
                                 @php
-                                    // Get the student object (could be User model or Student model)
-                                    $studentObj = $attempt->student;
-                                    
-                                    // Check all possible places where matric number is stored
-                                    $studentId = $studentObj->matric_number 
-                                            ?? $studentObj->matric_no 
-                                            ?? $studentObj->student_number
-                                            ?? $studentObj->user->matric_number 
-                                            ?? $studentObj->user->matric_no 
-                                            ?? $studentObj->studentProfile->matric_number 
-                                            ?? $studentObj->profile->matric_number
-                                            ?? null;
+                                    // 1. Get User ID or Student ID
+                                    $studentModel = $attempt->student;
+                                    $userId = $studentModel->user_id ?? $studentModel->id ?? null;
 
-                                    // Fallback ONLY if matric_number is completely absent across all models
-                                    if (!$studentId) {
-                                        $email = $studentObj->user->email ?? $studentObj->email ?? '';
-                                        $studentId = !empty($email) ? strtoupper(strtok($email, '@')) : 'N/A';
-                                    }
+                                    // 2. Query the database directly for the matric number if not present on $studentModel
+                                    $matricNo = $studentModel->matric_number 
+                                            ?? $studentModel->matric_no 
+                                            ?? \App\Models\Student::where('user_id', $userId)->value('matric_number')
+                                            ?? \App\Models\User::where('id', $userId)->value('matric_number')
+                                            ?? \DB::table('students')->where('user_id', $userId)->value('matric_number')
+                                            ?? \DB::table('users')->where('id', $userId)->value('matric_number');
+
+                                    // 3. Final fallback logic
+                                    $studentId = $matricNo ?: 'N/A';
                                 @endphp
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
